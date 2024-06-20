@@ -1,0 +1,5 @@
+/home/krutarth/Desktop/projects/code/neural_network/gpu/build/CMakeFiles/neuralnet.dir
+/home/krutarth/Desktop/projects/code/neural_network/gpu/build/CMakeFiles/layer.dir
+/home/krutarth/Desktop/projects/code/neural_network/gpu/build/CMakeFiles/main.dir
+/home/krutarth/Desktop/projects/code/neural_network/gpu/build/CMakeFiles/edit_cache.dir
+/home/krutarth/Desktop/projects/code/neural_network/gpu/build/CMakeFiles/rebuild_cache.dir

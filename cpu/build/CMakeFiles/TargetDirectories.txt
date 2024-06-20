@@ -1,5 +1,0 @@
-/home/krutarth/Desktop/projects/code/neural_network/cpu/build/CMakeFiles/NeuralNetwork.dir
-/home/krutarth/Desktop/projects/code/neural_network/cpu/build/CMakeFiles/globals.dir
-/home/krutarth/Desktop/projects/code/neural_network/cpu/build/CMakeFiles/xor.dir
-/home/krutarth/Desktop/projects/code/neural_network/cpu/build/CMakeFiles/edit_cache.dir
-/home/krutarth/Desktop/projects/code/neural_network/cpu/build/CMakeFiles/rebuild_cache.dir

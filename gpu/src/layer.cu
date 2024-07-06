@@ -107,10 +107,9 @@ void Layer::back_pass(const dev_vector<float> &input, dev_vector<float> &output,
 	
 	dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dim_grid((ncols + dim_block.x - 1)/dim_block.x, (input_rows + dim_block.y - 1)/dim_block.y);
-	//todo: implement backwards activation
 	matmul<<<dim_grid , dim_block>>>(input.data(), dev_weights_->data(), output.data(), input_rows, ncols, input_cols);	
 	cudaDeviceSynchronize();
-	//note : forget that the output matrix is transposed (no_of_samples, cols)
+	//note : do not forget that the output matrix is transposed (no_of_samples, cols)
 
 	////timing 
 	//cudaEventRecord(stop, 0);
@@ -151,16 +150,15 @@ void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vec
 	update_bias<<<1, nrows>>>(dev_bias_->data(), layer_delta.data(), no_of_samples, nrows, learning_rate); 
 	cudaDeviceSynchronize();
 
-	////do i need to do this?
-	//auto result = cudaMemcpy(this->data(), dev_weights_.data(), sizeof(float)*dev_weights_.size(), cudaMemcpyDeviceToHost);
-	//if(result != cudaSuccess){
-		//throw std::runtime_error("failed to copy to host!");
-	//}
-
-	//result = cudaMemcpy(this->bias(), dev_bias_.data(), sizeof(float)*dev_bias_.size(), cudaMemcpyDeviceToHost);
-	//if(result != cudaSuccess){
-		//throw std::runtime_error("failed to copy to host!");
-	//}
+	//do i need to do this?
+	auto result = cudaMemcpy(this->data(), dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
+	if(result != cudaSuccess){
+		throw std::runtime_error("failed to copy to host!");
+	}
+	result = cudaMemcpy(this->bias(), dev_bias_->data(), sizeof(float)*dev_bias_->size(), cudaMemcpyDeviceToHost);
+	if(result != cudaSuccess){
+		throw std::runtime_error("failed to copy to host!");
+	}
 
 	////timing 
 	//cudaEventRecord(stop, 0);

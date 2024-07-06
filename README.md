@@ -7,3 +7,6 @@
   - add the file with data?
   - how should training data be structured, .csv?
 - test GPU performance 
+
+## DOING
+- add sigmoid

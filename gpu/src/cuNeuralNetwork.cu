@@ -153,14 +153,14 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 	//delta will have no_of_samples rows and layer size cols
 	find_delta_and_transpose<<<dim_grid, dim_block>>>(dev_true_output.data(), (*layer_outputs.back()).data(), dev_input_delta.data(), true_output.nrows, true_output.ncols);
 
-	////debug
-	//std::cout << "DELTA\n";
-	//std::vector<float> o(layers.back().nrows*no_of_samples);
-	//cudaMemcpy(o.data(), dev_input_delta.begin(), sizeof(float)*o.size(), cudaMemcpyDeviceToHost);
-	//for(const auto out : o){
-		//std::cout << out << ' ';
-	//}
-	//std::cout << "\n\n";
+	//debug
+	std::cout << "DELTA\n";
+	std::vector<float> o(layers.back().nrows*no_of_samples);
+	cudaMemcpy(o.data(), dev_input_delta.begin(), sizeof(float)*o.size(), cudaMemcpyDeviceToHost);
+	for(const auto out : o){
+		std::cout << out << ' ';
+	}
+	std::cout << "\n\n";
 
 	//propogating the delta and updating weights
 	for(int i=layers.size()-1; i > -1; --i){
@@ -168,24 +168,15 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 		layers[i].back_pass(dev_input_delta, dev_output_delta, layer_outputs[i], no_of_samples);	
 		activation_layers[i]->back_activate(dev_output_delta, dev_input_delta);
 
-		////debug
-		//basic_matrix<float> output(no_of_samples, layers[i].ncols);
-		//if(count%2 == 0){
-			//auto result = cudaMemcpy(output.data(), dev_input_delta.begin(), sizeof(float)*output.size, cudaMemcpyDeviceToHost);
-			//if(result != cudaSuccess){
-				//throw std::runtime_error("failed to copy to host!");
-			//}
-		//}
-		//else{
-			//auto result = cudaMemcpy(output.data(), dev_output_delta.begin(), sizeof(float)*output.size, cudaMemcpyDeviceToHost);
-			//if(result != cudaSuccess){
-				//std::cout << cudaGetErrorString(result) << '\n';
-				//throw std::runtime_error("failed to copy to host!");
-			//}
-		//}
-		//std::cout << "DELTA\n";
-		//output.show();	
-		//std::cout << '\n';
+		//debug
+		basic_matrix<float> output(no_of_samples, layers[i].ncols);
+		auto result = cudaMemcpy(output.data(), dev_input_delta.begin(), sizeof(float)*output.size, cudaMemcpyDeviceToHost);
+		if(result != cudaSuccess){
+			throw std::runtime_error("failed to copy to host!");
+		}
+		std::cout << "DELTA\n";
+		output.show();	
+		std::cout << '\n';
 
 	}
 

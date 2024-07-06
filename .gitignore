@@ -1,2 +1,5 @@
-/build
+/gpu/build
+/cpu/build
+/cpu/data
+/gpu/data
 /gpu_specs

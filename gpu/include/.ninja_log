@@ -1,0 +1,6 @@
+# ninja log v6
+2	2755	1719885659140442733	CMakeFiles/layer.dir/src/layer.cu.o	4d7b73a719cd0eb6
+2755	2790	1719885661893668351	liblayer.a	7fc87da583bcd474
+3	2934	1719885659140442733	CMakeFiles/main.dir/main.cpp.o	268e3ca468ed7d3c
+1	3131	1719885659137109531	CMakeFiles/neuralnet.dir/src/cuNeuralNetwork.cu.o	2d4b09dcb88ef39d
+3131	3160	1719885662266987079	libneuralnet.a	893dfe22cc20a748

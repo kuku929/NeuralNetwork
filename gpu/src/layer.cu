@@ -25,12 +25,12 @@ Layer::Layer(int N, int M): basic_matrix(N,M){
 	}
 
 
-	dev_weights_ = dev_vector<float>(nrows*ncols);
-	dev_weights_.set(this->data(), nrows*ncols);
+	dev_weights_ = std::make_shared<dev_vector<float>>(nrows*ncols);
+	dev_weights_->set(this->data(), nrows*ncols);
 	cudaDeviceSynchronize();
 
-	dev_bias_ = dev_vector<float>(nrows);
-	dev_bias_.set(this->bias(), nrows);
+	dev_bias_ = std::make_shared<dev_vector<float>>(nrows);
+	dev_bias_->set(this->bias(), nrows);
 
 
 }
@@ -62,7 +62,7 @@ void Layer::forward_pass(const dev_vector<float> &input, dev_vector<float> &outp
 	//launching kernel
 	dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dim_grid((no_of_samples + dim_block.x - 1)/dim_block.x, (nrows + dim_block.y - 1)/dim_block.y);
-	gemm<<<dim_grid , dim_block>>>(dev_weights_.data(), input.data(), dev_bias_.data(), output.data(), nrows, no_of_samples, ncols);
+	gemm<<<dim_grid , dim_block>>>(dev_weights_->data(), input.data(), dev_bias_->data(), output.data(), nrows, no_of_samples, ncols);
 
 	cudaDeviceSynchronize();
 
@@ -76,7 +76,7 @@ void Layer::forward_pass(const dev_vector<float> &input, dev_vector<float> &outp
 
 }
 
-void Layer::back_pass(const dev_vector<float> &input, dev_vector<float> &output, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples, float decay){
+void Layer::back_pass(const dev_vector<float> &input, dev_vector<float> &output, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples){
 /*
  * @argument : Layer object
  *		input to layer of dim(no_of_samples, layer.ncols)
@@ -108,7 +108,7 @@ void Layer::back_pass(const dev_vector<float> &input, dev_vector<float> &output,
 	dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dim_grid((ncols + dim_block.x - 1)/dim_block.x, (input_rows + dim_block.y - 1)/dim_block.y);
 	//todo: implement backwards activation
-	matmul<<<dim_grid , dim_block>>>(input.data(), dev_weights_.data(), output.data(), input_rows, ncols, input_cols);	
+	matmul<<<dim_grid , dim_block>>>(input.data(), dev_weights_->data(), output.data(), input_rows, ncols, input_cols);	
 	cudaDeviceSynchronize();
 	//note : forget that the output matrix is transposed (no_of_samples, cols)
 
@@ -119,13 +119,13 @@ void Layer::back_pass(const dev_vector<float> &input, dev_vector<float> &output,
 	//std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n";
 
 	//todo : maybe layer_output should be stored in the layer itself?
-	update(input, layer_output, no_of_samples, decay);
+	update(input, layer_output, no_of_samples);
 	return;
 }
 
 
 
-void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples, float decay){
+void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples){
 /* @arguments : Layer object
  * 		weights in device memory
  * 		bias in device memory
@@ -144,23 +144,23 @@ void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vec
 	//cudaEventCreate(&stop);
 	//cudaEventRecord(start, 0);
 
-	float learning_rate = 0.09f*decay;
+	float learning_rate = 0.09f;
 	dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dim_grid((nrows + dim_block.x - 1)/dim_block.x, (ncols + dim_block.y - 1)/dim_block.y);
-	update_weights<<<dim_grid, dim_block>>>(dev_weights_.data(), layer_output->data(), layer_delta.data(), ncols, nrows, no_of_samples, learning_rate); 
-	update_bias<<<1, nrows>>>(dev_bias_.data(), layer_delta.data(), no_of_samples, nrows, learning_rate); 
+	update_weights<<<dim_grid, dim_block>>>(dev_weights_->data(), layer_output->data(), layer_delta.data(), ncols, nrows, no_of_samples, learning_rate); 
+	update_bias<<<1, nrows>>>(dev_bias_->data(), layer_delta.data(), no_of_samples, nrows, learning_rate); 
 	cudaDeviceSynchronize();
 
-	//do i need to do this?
-	auto result = cudaMemcpy(this->data(), dev_weights_.data(), sizeof(float)*dev_weights_.size(), cudaMemcpyDeviceToHost);
-	if(result != cudaSuccess){
-		throw std::runtime_error("failed to copy to host!");
-	}
+	////do i need to do this?
+	//auto result = cudaMemcpy(this->data(), dev_weights_.data(), sizeof(float)*dev_weights_.size(), cudaMemcpyDeviceToHost);
+	//if(result != cudaSuccess){
+		//throw std::runtime_error("failed to copy to host!");
+	//}
 
-	result = cudaMemcpy(this->bias(), dev_bias_.data(), sizeof(float)*dev_bias_.size(), cudaMemcpyDeviceToHost);
-	if(result != cudaSuccess){
-		throw std::runtime_error("failed to copy to host!");
-	}
+	//result = cudaMemcpy(this->bias(), dev_bias_.data(), sizeof(float)*dev_bias_.size(), cudaMemcpyDeviceToHost);
+	//if(result != cudaSuccess){
+		//throw std::runtime_error("failed to copy to host!");
+	//}
 
 	////timing 
 	//cudaEventRecord(stop, 0);

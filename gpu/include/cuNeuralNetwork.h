@@ -1,6 +1,7 @@
 #pragma once
-#include "Layer.h"
+#include "layer.h"
 #include "basic_matrix.h"
+#include "activation.h"
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -8,17 +9,21 @@
 #include <cstdio>
 #include <cmath> //pow
 
+namespace net{
 class Network{
 	public:
-		std::vector<Layer> layers;
+		std::vector<layer::Layer> layers;
+		std::vector<activation::ActivationLayer *> activation_layers;
 
 		Network(){};
-		void add_layer(size_t next_layer_size, std::string next_activ_func="Linear");
+		void add_layer(size_t front_layer_size, size_t back_layer_size);
 		/*
 		 * adds a layer to the network
 		 * input : size of the layer, activation function for that layer
 		 * returns : nothing
 		 */
+
+		void add_activation(activation::ActivationLayer &activation_function);
 
 		void print_weights(std::ostream &out=std::cout);
 		/*
@@ -27,7 +32,6 @@ class Network{
 		 * returns : nothing
 		 */
 
-		void test();
 		basic_matrix<float> forward_pass(basic_matrix<float> &input);
 		/*
 		 * one forward pass through the layers 
@@ -50,8 +54,6 @@ class Network{
 		//void fit(const vector<float> &input, const vector<float> &true_output, const float learning_rate, const float grad_decay, int verbose, int optimize);
 		//void print_weights(ostream &out=cout);
 	private:
-		//some useful quantities for implementation, no real use to the user
-		std::vector<std::string> activation_functions_  = {"sigmoid", "ReLU", "Leaky", "Linear"};
 		size_t max_layer_size=0; 
 };
-
+}

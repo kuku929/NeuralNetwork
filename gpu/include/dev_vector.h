@@ -1,5 +1,5 @@
 #pragma once
-#include "Layer.h"
+#include "basic_matrix.h"
 #include <stdexcept>
 #include <algorithm>
 #include <cuda_runtime.h>
@@ -21,10 +21,6 @@ class dev_vector{
 			set(host_vector.data(), host_vector.size());
 		}
 
-		explicit dev_vector(const Layer &host_layer){
-			allocate(host_layer.size);
-			set(host_layer.data(), host_layer.size);
-		}
 
 		explicit dev_vector(const basic_matrix<T> &host_matrix){
 			/*
@@ -85,10 +81,19 @@ class dev_vector{
 		}
 
 
-		__device__ void operator=(const dev_vector<T> &second){
-			cudaError_t result =  cudaMemcpy(this, &second, sizeof(dev_vector<T>), cudaMemcpyDeviceToDevice);
+		__host__ void operator=(const dev_vector<T> &second){
+			//this messes with dev_weights in layer class for some reason
+			if(second.size() > size()){
+				//throw std::runtime_error("dev vector sizes are unequal!");
+				start_=0;
+				end_=0;
+				allocate(second.size());
+			}
+			
+			cudaError_t result =  cudaMemcpy(start_, second.data(), sizeof(T)*second.size(), cudaMemcpyDeviceToDevice);
 			if(result != cudaSuccess){
-				throw std::runtime_error("failed to copy to host!");
+				std::cout << cudaGetErrorString(result) << '\n';
+				throw std::runtime_error("failed to copy vector!");
 			}
 		}
 

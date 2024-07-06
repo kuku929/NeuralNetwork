@@ -13,13 +13,17 @@ include_directories(include/)
 
 #adding files
 add_library(neuralnet ./src/cuNeuralNetwork.cu)
-add_library(layer ./src/Layer.cu)
+add_library(layer ./src/layer.cu)
+add_library(kernel ./src/kernel.cu)
+
+set_source_files_properties(main.cpp PROPERTIES LANGUAGE CUDA)
 add_executable(main main.cpp)
+target_link_libraries(layer kernel)
+target_link_libraries(neuralnet layer)
 target_link_libraries(main neuralnet)
-target_link_libraries(main layer)
 
 #cuda files settings
 set_target_properties(neuralnet PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set_target_properties(layer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-#set_property(TARGET matrix PROPERTY CUDA_ARCHITECTURES native)
+set_property(TARGET kernel PROPERTY CUDA_ARCHITECTURES native)
 

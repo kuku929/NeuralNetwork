@@ -9,8 +9,6 @@
 #include <stdexcept>
 #include <string>
 
-//template<class T>
-//class dev_vector;
 
 namespace layer{
 class Layer : public basic_matrix<float>{
@@ -23,8 +21,8 @@ class Layer : public basic_matrix<float>{
 		Layer(int N, int M);
 		void forward_pass(const dev_vector<float> &input, dev_vector<float> &output, const size_t no_of_samples);
 		
-		void back_pass(const dev_vector<float> &input, dev_vector<float> &output, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples, float decay);
-		void update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples, float decay);
+		void back_pass(const dev_vector<float> &input, dev_vector<float> &output, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples);
+		void update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples);
 		void show_bias(){
 			for(auto b : bias_){
 				std::cout << b << ' ';
@@ -84,14 +82,14 @@ class Layer : public basic_matrix<float>{
 
 		void show_dev(){
 			std::cout << "show:\n";
-			cudaMemcpy(this->data(), dev_weights_.data(), sizeof(float)*dev_weights_.size(), cudaMemcpyDeviceToHost);
+			cudaMemcpy(this->data(), dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
 			this->show();
 		}
 
 	private:
 		std::vector<float> bias_;
-		dev_vector<float> dev_weights_;
-		dev_vector<float> dev_bias_;
+		std::shared_ptr<dev_vector<float>> dev_weights_;
+		std::shared_ptr<dev_vector<float>> dev_bias_;
 
 
 };

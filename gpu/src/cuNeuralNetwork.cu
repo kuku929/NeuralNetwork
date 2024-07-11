@@ -166,7 +166,7 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 	for(int i=layers.size()-1; i > -1; --i){
 		//while propagating, we need the current layer and the activation derivative of the previous layer
 		layers[i].back_pass(dev_input_delta, dev_output_delta, layer_outputs[i], no_of_samples);	
-		activation_layers[i]->back_activate(dev_output_delta, dev_input_delta);
+		activation_layers[i]->back_activate(dev_output_delta, *layer_outputs[i], dev_input_delta);
 
 		//debug
 		basic_matrix<float> output(no_of_samples, layers[i].ncols);

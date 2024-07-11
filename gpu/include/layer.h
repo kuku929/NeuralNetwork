@@ -1,4 +1,6 @@
-#pragma once
+#ifndef LAYER_H
+#define LAYER_H
+
 #include "basic_matrix.h"
 #include "dev_vector.h"
 #include <iostream>
@@ -94,3 +96,4 @@ class Layer : public basic_matrix<float>{
 
 };
 }
+#endif

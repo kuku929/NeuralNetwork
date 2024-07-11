@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "kernel.h"
 const int BLOCK_SIZE=8;
+typedef float (*f_func_ptr)(const float ); 
+typedef float (*b_func_ptr)(const float , const float ); 
+
 
 __global__ void find_delta_and_transpose(float *a, float *b, float *output, int N, int M){
 	int bx = blockIdx.x, by = blockIdx.y;	
@@ -19,9 +22,11 @@ __global__ void dev_vec_matmul(const float *dev_a, const float *dev_b, float *de
 	int ROW = threadIdx.x;
 	float temp_value=0;
 
+	//// debug
 	//if(ROW == 0){
 		//printf("%f\n", activation_func_map[activ_func_ind](-1.0f));
 	//}
+
 	for(size_t i=0; i < M; ++i){
 		temp_value += dev_a[ROW*M + i]*dev_b[i];
 	}
@@ -92,6 +97,7 @@ __global__ void matmul(const float *a, const float *b, float *output, int N, int
 				}
 			}
 
+			////debug
 			//if(row == 0 && col == 0 && bx == 0 && by == 0){
 				//printf("kernel A : %f\n", A[0][0]);
 				//printf("kernel B : %f\n", B[0][0]);
@@ -110,14 +116,14 @@ __global__ void matmul(const float *a, const float *b, float *output, int N, int
 
 
 		}
-		//debug
+
+		////debug
 		//if(row == 0 && col == 0 && bx == 0 && by == 0){
 			//printf("kernel : %f\n", (*function)(-0.5));
 		//}
 
-		int index = (row_in_matrix)*M + col_in_matrix; 
 		//int transposed_index =(col_in_matrix)*N + row_in_matrix;
-		output[index] = temp_value;
+		output[(row_in_matrix)*M + col_in_matrix] = temp_value;
 	}
 }
 
@@ -125,6 +131,7 @@ __global__ void update_bias(float *dev_bias, float *layer_delta, int N, int M, f
 	int COL = threadIdx.x;
 	float temp_value=0;
 
+	//// debug
 	//if(ROW == 0){
 		//printf("%f\n", activation_func_map[activ_func_ind](-1.0f));
 	//}
@@ -180,12 +187,13 @@ __global__ void update_weights(float *dev_weights, float *layer_output, float *l
 		}
 
 		//transpose added
-		//debug
+
+		////debug
 		//if(row == 0 && col == 0 && bx == 0 && by == 0){
 			//printf("%f\n", A[0][0]);
 		//}
 		//printf("%f\n\n", learning_rate*temp_value);
+
 		dev_weights[row_in_matrix*M + col_in_matrix] += learning_rate*temp_value/K;
 	}
 }
-

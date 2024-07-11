@@ -1,4 +1,5 @@
-#pragma once
+#ifndef NEURALNET_H
+#define NEURALNET_H
 #include "layer.h"
 #include "basic_matrix.h"
 #include "activation.h"
@@ -57,3 +58,4 @@ class Network{
 		size_t max_layer_size=0; 
 };
 }
+#endif

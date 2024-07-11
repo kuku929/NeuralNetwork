@@ -17,7 +17,7 @@ int main(){
 	//Network net(layer_sizes, activation_functions);
 	net::Network net;
 	net.add_layer(2, 1);
-	auto activ = activation::Linear();
+	auto activ = activation::Sigmoid(1);
 	net.add_activation(activ);
 	net.print_weights();
 
@@ -49,19 +49,20 @@ int main(){
 	test.get(0,3) = 0;
 	test.get(1,3) = 0;
 
-	//basic_matrix<float> o = net.forward_pass(test);
+	basic_matrix<float> o = net.forward_pass(test);
+	o.show();
 
 	//std::cout << "----------------------------\n";
 
-	//basic_matrix<float> input(2,1);
-	basic_matrix<float> op(1,4);
-	op.get(0,0) = 0;
-	op.get(0,1) = 1;
-	op.get(0,2) = 1;
-	op.get(0,3) = 0;
-	net.backward_pass(test, op);
+	////basic_matrix<float> input(2,1);
+	//basic_matrix<float> op(1,4);
+	//op.get(0,0) = 0;
+	//op.get(0,1) = 1;
+	//op.get(0,2) = 1;
+	//op.get(0,3) = 0;
+	//net.backward_pass(test, op);
 
-	net.print_weights();
+	//net.print_weights();
 	//for(int i=0; i < training_size; ++i){
 		//int rand_index = rand()%n;
 		//input.get(0,0) = v.get(0, rand_index);

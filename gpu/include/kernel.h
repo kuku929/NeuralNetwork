@@ -1,4 +1,6 @@
-#pragma once
+#ifndef KERNEL_H
+#define KERNEL_H
+
 #include <stdio.h>
 extern const int BLOCK_SIZE;
 __global__ void find_delta_and_transpose(float *a, float *b, float *output, int N, int M);
@@ -12,3 +14,5 @@ __global__ void matmul(const float *a, const float *b, float *output, int N, int
 __global__ void update_bias(float *dev_bias, float *layer_delta, int N, int M, float learning_rate); 
 
 __global__ void update_weights(float *dev_weights, float *layer_output, float *layer_delta, int N, int M, int K, float learning_rate);
+
+#endif

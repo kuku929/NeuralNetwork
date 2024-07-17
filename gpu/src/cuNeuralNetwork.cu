@@ -43,6 +43,9 @@ void Network::add_activation(activation::ActivationLayer &activation_function){
 	return;
 }
 
+basic_matrix<float> Network::forward_pass(basic_matrix<float> &&input){
+	return forward_pass(input);
+}
 
 basic_matrix<float> Network::forward_pass(basic_matrix<float> &input){
 /*
@@ -106,9 +109,9 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 	//index i holds the layer outputs for layer i, each dev_vector will be a matrix with rows = layers.nrows, cols = no of samples 
 	std::vector<std::shared_ptr<dev_vector<float>>> layer_outputs(layers.size()+1);
 
-	////debug
-	//std::vector<basic_matrix<float>> h_layer_outputs(layers.size()+1);
-	//h_layer_outputs[0] = input;
+	// //debug
+	// std::vector<basic_matrix<float>> h_layer_outputs(layers.size()+1);
+	// h_layer_outputs[0] = input;
 
 	//adding the initial input
 	layer_outputs[0] = std::make_shared<dev_vector<float>>(input);	
@@ -116,27 +119,27 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 	for(int j=0; j < layers.size(); ++j){
 		layer_outputs[j+1] = std::make_shared<dev_vector<float>>((layers[j].nrows)*no_of_samples);
 
-		////debug
-		//h_layer_outputs[j+1] = basic_matrix<float>(layers[j].nrows, no_of_samples);
+		// //debug
+		// h_layer_outputs[j+1] = basic_matrix<float>(layers[j].nrows, no_of_samples);
 
 	}
 
 	//forward pass
 	for(int i=0; i < layers.size(); ++i){
 		layers[i].forward_pass(*layer_outputs[i], *layer_outputs[i+1], no_of_samples);
-		//will this work?
+		//will this workd
 		activation_layers[i]->forward_activate(*layer_outputs[i+1], *layer_outputs[i+1]);
 	}
 	
-	////debug
-	//for(int i=0; i < layer_outputs.size(); ++i){
-		//cudaMemcpy(h_layer_outputs[i].data(), layer_outputs[i]->data(), sizeof(float)*layer_outputs[i]->size(), cudaMemcpyDeviceToHost); 
-	//}
-	//std::cout << "LAYER OUTPUTS\n";
-	//for(auto const a : h_layer_outputs){
-		//a.show();
-		//std::cout << '\n';
-	//}
+	// //debug
+	// for(int i=0; i < layer_outputs.size(); ++i){
+	// 	cudaMemcpy(h_layer_outputs[i].data(), layer_outputs[i]->data(), sizeof(float)*layer_outputs[i]->size(), cudaMemcpyDeviceToHost); 
+	// }
+	// std::cout << "LAYER OUTPUTS\n";
+	// for(auto const a : h_layer_outputs){
+	// 	a.show();
+	// 	std::cout << '\n';
+	// }
 
 	//finding intial delta
 	dev_vector<float> dev_true_output(true_output);
@@ -152,32 +155,33 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 	//finding the difference and transposing the resulting matrix
 	//delta will have no_of_samples rows and layer size cols
 	find_delta_and_transpose<<<dim_grid, dim_block>>>(dev_true_output.data(), (*layer_outputs.back()).data(), dev_input_delta.data(), true_output.nrows, true_output.ncols);
+	std::cout << "true output : " << true_output.get(0,0) << '\n';
 
-	//debug
-	std::cout << "DELTA\n";
-	std::vector<float> o(layers.back().nrows*no_of_samples);
-	cudaMemcpy(o.data(), dev_input_delta.begin(), sizeof(float)*o.size(), cudaMemcpyDeviceToHost);
-	for(const auto out : o){
-		std::cout << out << ' ';
-	}
-	std::cout << "\n\n";
+	// //debug
+	// std::cout << "DELTA\n";
+	// std::vector<float> o(layers.back().nrows*no_of_samples);
+	// cudaMemcpy(o.data(), dev_input_delta.begin(), sizeof(float)*o.size(), cudaMemcpyDeviceToHost);
+	// for(const auto out : o){
+	// 	std::cout << out << ' ';
+	// }
+	// std::cout << "\n\n";
 
 	//propogating the delta and updating weights
 	for(int i=layers.size()-1; i > -1; --i){
-		//while propagating, we need the current layer and the activation derivative of the previous layer
-		layers[i].back_pass(dev_input_delta, dev_output_delta, layer_outputs[i], no_of_samples);	
-		activation_layers[i]->back_activate(dev_output_delta, *layer_outputs[i], dev_input_delta);
+		// first we multiply with derivative of activation and then back pass deltas through dense layer
 
-		//debug
-		basic_matrix<float> output(no_of_samples, layers[i].ncols);
-		auto result = cudaMemcpy(output.data(), dev_input_delta.begin(), sizeof(float)*output.size, cudaMemcpyDeviceToHost);
-		if(result != cudaSuccess){
-			throw std::runtime_error("failed to copy to host!");
-		}
-		std::cout << "DELTA\n";
-		output.show();	
-		std::cout << '\n';
+		// //debug
+		// basic_matrix<float> output(no_of_samples, layers[i].nrows);
+		// auto result = cudaMemcpy(output.data(), dev_input_delta.begin(), sizeof(float)*output.size, cudaMemcpyDeviceToHost);
+		// if(result != cudaSuccess){
+		// 	throw std::runtime_error("failed to copy to host!");
+		// }
+		// std::cout << "DELTA\n";
+		// output.show();	
+		// std::cout << '\n';
 
+		activation_layers[i]->back_activate(dev_input_delta, *layer_outputs[i+1], dev_output_delta);
+		layers[i].back_pass(dev_output_delta, dev_input_delta, layer_outputs[i], no_of_samples);	
 	}
 
 }

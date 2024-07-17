@@ -143,7 +143,7 @@ void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vec
 	//cudaEventCreate(&stop);
 	//cudaEventRecord(start, 0);
 
-	float learning_rate = 0.09f;
+	float learning_rate = 0.009f;
 	dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dim_grid((nrows + dim_block.x - 1)/dim_block.x, (ncols + dim_block.y - 1)/dim_block.y);
 	update_weights<<<dim_grid, dim_block>>>(dev_weights_->data(), layer_output->data(), layer_delta.data(), ncols, nrows, no_of_samples, learning_rate); 

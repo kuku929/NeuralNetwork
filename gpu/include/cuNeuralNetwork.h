@@ -33,6 +33,7 @@ class Network{
 		 * returns : nothing
 		 */
 
+		basic_matrix<float> forward_pass(basic_matrix<float> &&input);
 		basic_matrix<float> forward_pass(basic_matrix<float> &input);
 		/*
 		 * one forward pass through the layers 

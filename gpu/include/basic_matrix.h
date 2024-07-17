@@ -51,6 +51,29 @@ class basic_matrix{
 			return data_[i*ncols + j];
 		}
 
+		basic_matrix<T> get_col(int col){
+			/*
+			* returns a row of type basic_matrix
+			*/
+			basic_matrix<T> col_mat(nrows, 1);
+			for(int i=0;i < nrows; ++i){
+				col_mat.get(i, 0) = data_[col + i*ncols];
+			}
+			return col_mat;
+		}
+
+
+		basic_matrix<T> get_row(int row){
+			/*
+			* returns a row of type basic_matrix
+			*/
+			basic_matrix<T> row_mat(1, ncols);
+			for(int i=0;i < ncols; ++i){
+				row_mat.get(0, i) = data_[row*ncols + i];
+			}
+			return row_mat;
+		}
+
 		void show() const{
 			/*
 			 * prints the matrix

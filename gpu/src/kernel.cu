@@ -67,8 +67,15 @@ __global__ void gemm(const float *a, const float *b, const float *c, float *outp
 			}
 
 			__syncthreads();
+			
 
 		}
+
+		// //debug
+		// int index = row_in_matrix*M + col_in_matrix;
+		// if(index == 0){
+		// 	printf("gemm : %f\n", temp_value+c[0]);
+		// }
 
 		output[(row_in_matrix)*M + col_in_matrix] = temp_value+c[row_in_matrix];
 	}

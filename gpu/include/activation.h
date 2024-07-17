@@ -39,10 +39,34 @@ class Sigmoid : public ActivationLayer{
 		}f_sigmoid_;
 	
 		struct SigmoidBack{
-			__host__ __device__ float operator()(float input, float output){
-				return output*(1-output)*input;
+			__host__ __device__ float operator()(float input, float layer_output){
+				return layer_output*(1-layer_output)*input;
 			}
 		}b_sigmoid_;
+};
+
+class ReLU: public ActivationLayer{
+	public:
+		void forward_activate(dev_vector<float> &input, dev_vector<float> &output) override;
+		void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output) override;
+		ReLU() = default;
+		ReLU(int s): ActivationLayer(s){};
+		~ReLU() = default; 
+		struct ReLUForward{
+			__host__ __device__ float operator()(float input){
+				if(input > 0)
+					return input;
+				return 0;
+			}
+		}f_relu_;
+	
+		struct ReLUBack{
+			__host__ __device__ float operator()(float input, float layer_output){
+				if(layer_output > 0)
+					return input;
+				return 0;
+			}
+		}b_relu_;
 };
 }
 

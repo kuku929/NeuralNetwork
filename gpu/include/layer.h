@@ -10,8 +10,10 @@
 #include <cstdio>
 #include <stdexcept>
 #include <string>
-
-
+namespace optimizer{
+	class Optimizer;
+	class RMSProp;
+}
 namespace layer{
 class Layer : public basic_matrix<float>{
 	/*
@@ -22,6 +24,11 @@ class Layer : public basic_matrix<float>{
 		Layer(): basic_matrix(){};
 		Layer(int N, int M);
 		void forward_pass(const dev_vector<float> &input, dev_vector<float> &output, const size_t no_of_samples);
+		// void forward_pass(const std::shared_ptr<dev_vector<float>> input, std::shared_ptr<dev_vector<float>> output, const size_t no_of_samples){
+		// 	const dev_vector<float> &input_val = *input;
+		// 	dev_vector<float> &output_val = *output;
+		// 	forward_pass(input_val, output_val, no_of_samples);
+		// }
 		
 		void back_pass(const dev_vector<float> &input, dev_vector<float> &output, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples);
 		void update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples);
@@ -82,6 +89,8 @@ class Layer : public basic_matrix<float>{
 			return data_[row*ncols + col];
 		}
 
+		void copy_to_host();
+
 		void show_dev(){
 			std::cout << "show:\n";
 			cudaMemcpy(this->data(), dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
@@ -92,8 +101,7 @@ class Layer : public basic_matrix<float>{
 		std::vector<float> bias_;
 		std::shared_ptr<dev_vector<float>> dev_weights_;
 		std::shared_ptr<dev_vector<float>> dev_bias_;
-
-
+	friend class optimizer::RMSProp;
 };
 }
 #endif

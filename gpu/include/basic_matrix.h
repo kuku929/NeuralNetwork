@@ -82,7 +82,7 @@ class basic_matrix{
 				for(int j=0; j < ncols; ++j){
 					std::cout << data_[i*ncols + j] << ' ';
 				}
-				std::cout << '\n';
+				std::cout << std::endl;
 			}
 		}
 

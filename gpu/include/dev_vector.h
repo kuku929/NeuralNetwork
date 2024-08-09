@@ -65,6 +65,7 @@ class dev_vector{
 
 			cudaError_t result = cudaMemcpy(start_, src, min*sizeof(T), cudaMemcpyHostToDevice);
 			if(result != cudaSuccess){
+				std::cerr << cudaGetErrorString(result);
 				throw std::runtime_error("failed to copy to device!");
 			}
 		}
@@ -75,6 +76,7 @@ class dev_vector{
 			size_t min = std::min(size, this->size());
 			cudaError_t result = cudaMemcpy(dest, start_, min*sizeof(T), cudaMemcpyDeviceToHost);
 			if(result != cudaSuccess){
+				std::cerr << cudaGetErrorString(result) << std::flush;
 				throw std::runtime_error("failed to copy to host!");
 			}
 
@@ -92,7 +94,7 @@ class dev_vector{
 			
 			cudaError_t result =  cudaMemcpy(start_, second.data(), sizeof(T)*second.size(), cudaMemcpyDeviceToDevice);
 			if(result != cudaSuccess){
-				std::cout << cudaGetErrorString(result) << '\n';
+				std::cerr << cudaGetErrorString(result);
 				throw std::runtime_error("failed to copy vector!");
 			}
 		}
@@ -102,6 +104,7 @@ class dev_vector{
 			cudaError_t result = cudaMalloc((void**)&start_, size*sizeof(T));
 			if(result != cudaSuccess){
 				start_=end_=0;
+				std::cerr << cudaGetErrorString(result) << std::flush;
 				throw std::runtime_error("failed to copy to host!");
 			}
 			end_=start_+size;
@@ -111,6 +114,7 @@ class dev_vector{
 			cudaError_t result = cudaMalloc((void**)&start_, size*sizeof(T));
 			if(result != cudaSuccess){
 				start_=end_=0;
+				std::cerr << cudaGetErrorString(result) << std::flush;
 				throw std::runtime_error("failed to copy to host!");
 			}
 			end_=start_;
@@ -119,6 +123,7 @@ class dev_vector{
 		void push(const T* src, size_t size){
 			cudaError_t result = cudaMemcpy(end_, src, size*sizeof(T), cudaMemcpyHostToDevice);
 			if(result != cudaSuccess){
+				std::cerr << cudaGetErrorString(result) << std::flush;
 				throw std::runtime_error("failed to copy to device!");
 			}
 			end_+=size;

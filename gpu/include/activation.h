@@ -6,8 +6,8 @@
 namespace activation{
 class ActivationLayer{ //base class, forward_activate and back_activate need to be overridden for derived classes
 	public:
-		virtual void forward_activate(dev_vector<float> &input, dev_vector<float> &output)=0; //make it pure virtual, thus *requiring* override
-		virtual void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output)=0;
+		virtual void forward_activate(dev_vector<float> &input, dev_vector<float> &output, int no_of_samples)=0; //make it pure virtual, thus *requiring* override
+		virtual void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output, int no_of_samples)=0;
 		ActivationLayer() = default;
 		ActivationLayer(int s): size(s){};
 		virtual ~ActivationLayer(){};
@@ -17,8 +17,8 @@ class ActivationLayer{ //base class, forward_activate and back_activate need to 
 
 class Linear : public ActivationLayer{
 	public:
-		void forward_activate(dev_vector<float> &input, dev_vector<float> &output) override;
-		void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output) override;
+		void forward_activate(dev_vector<float> &input, dev_vector<float> &output, int no_of_samples) override;
+		void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output, int no_of_samples) override;
 		Linear() = default;
 		Linear(int s): ActivationLayer(s){};
 		~Linear() = default; 
@@ -26,8 +26,8 @@ class Linear : public ActivationLayer{
 
 class Sigmoid : public ActivationLayer{
 	public:
-		void forward_activate(dev_vector<float> &input, dev_vector<float> &output) override;
-		void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output) override;
+		void forward_activate(dev_vector<float> &input, dev_vector<float> &output, int no_of_samples) override;
+		void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output, int no_of_samples) override;
 		Sigmoid() = default;
 		Sigmoid(int s): ActivationLayer(s){};
 		~Sigmoid() = default; 
@@ -47,8 +47,8 @@ class Sigmoid : public ActivationLayer{
 
 class ReLU: public ActivationLayer{
 	public:
-		void forward_activate(dev_vector<float> &input, dev_vector<float> &output) override;
-		void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output) override;
+		void forward_activate(dev_vector<float> &input, dev_vector<float> &output, int no_of_samples) override;
+		void back_activate(dev_vector<float> &input, dev_vector<float> &layer_output, dev_vector<float> &output, int no_of_samples) override;
 		ReLU() = default;
 		ReLU(int s): ActivationLayer(s){};
 		~ReLU() = default; 

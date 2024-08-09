@@ -10,6 +10,18 @@
 using namespace layer;
 extern const int BLOCK_SIZE;
 
+// #define __START_TIMER__  float gpu_elapsed_time_ms; \
+// 	cudaEvent_t start, stop; \
+// 	cudaEventCreate(&start); \
+// 	cudaEventCreate(&stop); \
+// 	cudaEventRecord(start, 0); \
+
+// #define __END_TIMER__ cudaEventRecord(stop, 0); \
+// 	cudaEventSynchronize(stop); \
+// 	cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop); \
+// 	std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n"; \
+
+
 Layer::Layer(int N, int M): basic_matrix(N,M){
 	bias_.resize(N);	
 
@@ -47,12 +59,7 @@ void Layer::forward_pass(const dev_vector<float> &input, dev_vector<float> &outp
  * using cache-tiled multiplication
  */
 
-	//float gpu_elapsed_time_ms;
-	//cudaEvent_t start, stop;
-	//cudaEventCreate(&start);
-	//cudaEventCreate(&stop);
-	//cudaEventRecord(start, 0);
-
+	// __START_TIMER__
 	//copying data to gpu 
 	//dev_vector<float> weights(this);
 	//dev_vector<float> bias(nrows);
@@ -64,14 +71,15 @@ void Layer::forward_pass(const dev_vector<float> &input, dev_vector<float> &outp
 	dim3 dim_grid((no_of_samples + dim_block.x - 1)/dim_block.x, (nrows + dim_block.y - 1)/dim_block.y);
 	gemm<<<dim_grid , dim_block>>>(dev_weights_->data(), input.data(), dev_bias_->data(), output.data(), nrows, no_of_samples, ncols);
 
-	cudaDeviceSynchronize();
+	// //debug
+	// std::cout << "forward_pass weights:\n";
+	// basic_matrix<float> h_output(nrows, ncols);
+	// cudaMemcpy(h_output.data(), dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
+	// h_output.show();
+	// std::cout << "forward_pass weights end--\n";
+	// cudaDeviceSynchronize();
 
-	////timing 
-	//cudaEventRecord(stop, 0);
-	//cudaEventSynchronize(stop);
-	//cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
-	//std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n";
-
+	// __END_TIMER__
 	return;
 
 }
@@ -90,12 +98,6 @@ void Layer::back_pass(const dev_vector<float> &input, dev_vector<float> &output,
  * once pass is done, updates the layer's weights and bias using layer_output and input
  * by calling update_layer()
  */
-	//float gpu_elapsed_time_ms;
-	//cudaEvent_t start, stop;
-	//cudaEventCreate(&start);
-	//cudaEventCreate(&stop);
-	//cudaEventRecord(start, 0);
-
 	//copying data to gpu 
 	//dev_vector<float> weights(this);
 	//dev_vector<float> bias(nrows);
@@ -111,17 +113,20 @@ void Layer::back_pass(const dev_vector<float> &input, dev_vector<float> &output,
 	cudaDeviceSynchronize();
 	//note : do not forget that the output matrix is transposed (no_of_samples, cols)
 
-	////timing 
-	//cudaEventRecord(stop, 0);
-	//cudaEventSynchronize(stop);
-	//cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
-	//std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n";
-
 	//todo : maybe layer_output should be stored in the layer itself?
-	update(input, layer_output, no_of_samples);
+
+	//do i need to do this?
+	// auto result = cudaMemcpy(this->data(), dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
+	// if(result != cudaSuccess){
+	// 	throw std::runtime_error("failed to copy to host!");
+	// }
+	// result = cudaMemcpy(this->bias(), dev_bias_->data(), sizeof(float)*dev_bias_->size(), cudaMemcpyDeviceToHost);
+	// if(result != cudaSuccess){
+	// 	throw std::runtime_error("failed to copy to host!");
+	// }
+
 	return;
 }
-
 
 
 void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples){
@@ -137,13 +142,8 @@ void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vec
  * cache-tiled multiplication used to update the weights
  * after updating, the new weights and bias are copied to host
  */
-	//float gpu_elapsed_time_ms;
-	//cudaEvent_t start, stop;
-	//cudaEventCreate(&start);
-	//cudaEventCreate(&stop);
-	//cudaEventRecord(start, 0);
-
-	float learning_rate = 0.009f;
+	//  __START_TIMER__
+	float learning_rate = 0.09f;
 	dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dim_grid((nrows + dim_block.x - 1)/dim_block.x, (ncols + dim_block.y - 1)/dim_block.y);
 	update_weights<<<dim_grid, dim_block>>>(dev_weights_->data(), layer_output->data(), layer_delta.data(), ncols, nrows, no_of_samples, learning_rate); 
@@ -160,11 +160,19 @@ void Layer::update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vec
 		throw std::runtime_error("failed to copy to host!");
 	}
 
-	////timing 
-	//cudaEventRecord(stop, 0);
-	//cudaEventSynchronize(stop);
-	//cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
-	//std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n";
-
+	// __END_TIMER__
 	return;
+}
+
+void layer::Layer::copy_to_host()
+{
+	// do i need to do this?
+	auto result = cudaMemcpy(this->data(), this->dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
+	if(result != cudaSuccess){
+		throw std::runtime_error("failed to copy to host!");
+	}
+	result = cudaMemcpy(this->bias(), dev_bias_->data(), sizeof(float)*dev_bias_->size(), cudaMemcpyDeviceToHost);
+	if(result != cudaSuccess){
+		throw std::runtime_error("failed to copy to host!");
+	}
 }

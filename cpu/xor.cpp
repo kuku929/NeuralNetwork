@@ -51,6 +51,7 @@ int main(int argc, char **argv){
 	}
 
 	vector<int> count(4,0);
+	srand(1);
 	int index;
 	for(int i=0;i<size;i++){
 		index = rand()%4;

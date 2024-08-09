@@ -12,7 +12,8 @@ int main(){
 
     int input_size = 784;
     int output_size = 10;
-    int no_of_samples = 1024;
+    int no_of_samples = 32;
+    int epochs = 1000;
 
     basic_matrix<float> train_images(input_size, no_of_samples);
     basic_matrix<float> train_labels(output_size, no_of_samples);
@@ -25,22 +26,44 @@ int main(){
     }
 
     //neural network
+    float learning_rate = 0.009;
+    float beta = 0.9;
     net::Network net;
+    //layer 1
     net.add_layer(input_size, 512);
     auto activ = activation::ReLU(512);
     net.add_activation(activ);
+    auto optim = optimizer::RMSProp(net.layers.back(), learning_rate, beta);
+    net.add_optimizer(optim);
+
+    //layer 2
     net.add_layer(512, 512);
     auto activ1 = activation::ReLU(512);
     net.add_activation(activ1);
+    auto optim1 = optimizer::RMSProp(net.layers.back(), learning_rate, beta);
+    net.add_optimizer(optim1);
+
+    //layer 3
     net.add_layer(512, output_size);
-    auto activ2 = activation::ReLU(output_size);
+    auto activ2 = activation::Sigmoid(output_size);
     net.add_activation(activ2);
+    auto optim2 = optimizer::RMSProp(net.layers.back(), learning_rate, beta);
+    net.add_optimizer(optim2);
+
+    std::cout << "before :\n";
+    auto o = net.forward_pass(train_images.get_col(0));
+    o.show();
 
     //training
-    net.backward_pass(train_images, train_labels);
+    for(int i=0;i < epochs; ++i){
+        net.backward_pass(train_images, train_labels);
+        o = net.forward_pass(train_images.get_col(0));
+        o.show();
+    }
 
     //testing
-    auto o = net.forward_pass(train_images.get_col(0));
+    std::cout << "after :\n";
+    o = net.forward_pass(train_images.get_col(0));
     o.show();
     std::cout << "actual values : \n";
     train_labels.get_col(0).show();

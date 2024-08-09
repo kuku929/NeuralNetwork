@@ -3,6 +3,7 @@
 #include "layer.h"
 #include "basic_matrix.h"
 #include "activation.h"
+#include "optimizer.h"
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -13,8 +14,13 @@
 namespace net{
 class Network{
 	public:
-		std::vector<layer::Layer> layers;
+		// right now you need an optimizer for each layer, maybe there is a better way?
+		// in the future, the back_pass of the network will be written by user in main 
+		// std::vector<layer::Layer> layers;
+		//todo : convert to this:
+		std::vector<std::shared_ptr<layer::Layer>> layers; //optimizer will also own the memory
 		std::vector<activation::ActivationLayer *> activation_layers;
+		std::vector<optimizer::Optimizer *> optimizers;
 
 		Network(){};
 		void add_layer(size_t front_layer_size, size_t back_layer_size);
@@ -25,6 +31,7 @@ class Network{
 		 */
 
 		void add_activation(activation::ActivationLayer &activation_function);
+		void add_optimizer(optimizer::Optimizer &optimizer);
 
 		void print_weights(std::ostream &out=std::cout);
 		/*

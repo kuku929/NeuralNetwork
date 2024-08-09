@@ -1,5 +1,7 @@
-/gpu/build
 /cpu/build
 /cpu/data
+/cpu/.vscode
 /gpu/data
+/gpu/.vscode
 /gpu_specs
+/gpu/build

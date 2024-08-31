@@ -13,8 +13,8 @@
 	cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop); \
 	std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n"; \
 
-using namespace optimizer;
-RMSProp::RMSProp(std::shared_ptr<layer::Layer> layer, float learning_rate, float beta): Optimizer(layer, learning_rate), beta(beta){ 
+using namespace nnet;
+RMSProp::RMSProp(std::shared_ptr<nnet::Layer> layer, float learning_rate, float beta): Optimizer(layer, learning_rate), beta(beta){ 
 	//allocating device memory for gradient sum
 	//will this be zero by default or should i launch a kernel to make them zero?
 	dev_grad_weights_ = std::make_shared<dev_vector<float>>(layer->nrows*layer->ncols);
@@ -35,15 +35,15 @@ void RMSProp::update_bias(const dev_vector<float> &layer_delta, const size_t no_
 	cudaDeviceSynchronize();
 	// __END_TIMER__
 
-	//do i need to do this?
-	// auto result = cudaMemcpy(this->data(), dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
-	// if(result != cudaSuccess){
-	// 	throw std::runtime_error("failed to copy to host!");
-	// }
-	// result = cudaMemcpy(this->bias(), dev_bias_->data(), sizeof(float)*dev_bias_->size(), cudaMemcpyDeviceToHost);
-	// if(result != cudaSuccess){
-	// 	throw std::runtime_error("failed to copy to host!");
-	// }
+
+	//auto result = cudaMemcpy(this->data(), dev_weights_->data(), sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
+	//if(result != cudaSuccess){
+	 //throw std::runtime_error("failed to copy to host!");
+	//}
+	//result = cudaMemcpy(this->bias(), dev_bias_->data(), sizeof(float)*dev_bias_->size(), cudaMemcpyDeviceToHost);
+	//if(result != cudaSuccess){
+	 //throw std::runtime_error("failed to copy to host!");
+	//}
 
 
 	return;

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "kernel.h"
+// #define FAST_RECKLESS
 const int BLOCK_SIZE=8;
 typedef float (*f_func_ptr)(const float ); 
 typedef float (*b_func_ptr)(const float , const float ); 
@@ -64,12 +65,13 @@ __global__ void gemm(const float *a, const float *b, const float *c, float *outp
 		float temp_value=0;
 		for(int i=0; i < K; i+=BLOCK_SIZE){
 			__shared__ float A[BLOCK_SIZE][BLOCK_SIZE], B[BLOCK_SIZE][BLOCK_SIZE]; 
-
 			//copying to shared memory
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				for(int k=0; k < BLOCK_SIZE; ++k){
-					// this is not good, maybe BLOCK_SIZE can change depending upon the network arch
-					// should i move this if outside, like (by+1)*BLOCK_SIZE < N? maybe wrap divergence may happen then
+					#if defined(FAST_RECKLESS)
+					A[j][k] = a[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
+					B[j][k] = b[(i+j)*M + bx*BLOCK_SIZE+k]; //bx*BLOCK_SIZE+k -> column, i+j -> row 
+					#else
 					if(by*BLOCK_SIZE+j < N && i+k < K){
 						A[j][k] = a[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
 					}else{
@@ -80,21 +82,16 @@ __global__ void gemm(const float *a, const float *b, const float *c, float *outp
 					}else{
 						B[j][k] = 0;
 					}
+					#endif
 				}
 			}
-
-
 			//wait for completion
 			__syncthreads();
-
 			//multiply and add
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				temp_value += A[row][j]*B[j][col];
 			}
-
 			__syncthreads();
-			
-
 		}
 
 		// //debug
@@ -121,10 +118,13 @@ __global__ void matmul(const float *a, const float *b, float *output, int N, int
 		float temp_value=0;
 		for(int i=0; i < K; i+=BLOCK_SIZE){
 			__shared__ float A[BLOCK_SIZE][BLOCK_SIZE], B[BLOCK_SIZE][BLOCK_SIZE]; 
-
 			//copying to shared memory
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				for(int k=0; k < BLOCK_SIZE; ++k){
+					#if defined(FAST_RECKLESS)
+					A[j][k] = a[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
+					B[j][k] = b[(i+j)*M + bx*BLOCK_SIZE+k]; //bx*BLOCK_SIZE+k -> column, i+j -> row 
+					#else
 					if(by*BLOCK_SIZE+j < N && i+k < K){
 						A[j][k] = a[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
 					}else{
@@ -135,6 +135,7 @@ __global__ void matmul(const float *a, const float *b, float *output, int N, int
 					}else{
 						B[j][k] = 0;
 					}
+					#endif
 				}
 			}
 
@@ -144,18 +145,13 @@ __global__ void matmul(const float *a, const float *b, float *output, int N, int
 				//printf("kernel B : %f\n", B[0][0]);
 			//}
 
-
 			//wait for completion
 			__syncthreads();
-
 			//multiply and add
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				temp_value += A[row][j]*B[j][col];
 			}
-
 			__syncthreads();
-
-
 		}
 
 		////debug
@@ -211,10 +207,13 @@ __global__ void update_weights(float *dev_weights, float *layer_output, float *l
 		float temp_value = 0;
 		for(int i=0; i < K; i+=BLOCK_SIZE){
 			__shared__ float A[BLOCK_SIZE][BLOCK_SIZE], B[BLOCK_SIZE][BLOCK_SIZE]; 
-
 			//copying to shared memory
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				for(int k=0; k < BLOCK_SIZE; ++k){
+					#if defined(FAST_RECKLESS)
+					A[j][k] = layer_output[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
+					B[j][k] = layer_delta[(i+j)*M + bx*BLOCK_SIZE+k]; //bx*BLOCK_SIZE+k -> column, i+j -> row 
+					#else
 					if(by*BLOCK_SIZE+j < N && i+k < K){
 						A[j][k] = layer_output[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
 					}else{
@@ -225,21 +224,17 @@ __global__ void update_weights(float *dev_weights, float *layer_output, float *l
 					}else{
 						B[j][k] = 0;
 					}
+					#endif
 				}
 			}
-
 			//wait for completion
 			__syncthreads();
-
 			//multiply and add
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				temp_value += A[row][j]*B[j][col];
 			}
-
 			__syncthreads();
 		}
-
-		//transpose added
 
 		////debug
 		//if(row == 0 && col == 0 && bx == 0 && by == 0){
@@ -247,8 +242,6 @@ __global__ void update_weights(float *dev_weights, float *layer_output, float *l
 		//}
 		//printf("%f\n\n", learning_rate*temp_value);
 
-		//NOTE : both these statements work for xor at least, wtf
-		// dev_weights[row_in_matrix*M + col_in_matrix] += learning_rate*temp_value/K;
 		dev_weights[col_in_matrix*N + row_in_matrix] += learning_rate*temp_value/K;
 	}
 }
@@ -269,8 +262,6 @@ __global__ void rmsprop_update_bias_(float *dev_bias, float *layer_delta, float 
 
 	gradient_sum[COL] = gradient_sum[COL]*beta + (1-beta)*temp_value*temp_value;
 	dev_bias[COL] += learning_rate*temp_value/(1e-5 + sqrt(gradient_sum[COL]));
-	// NOTE : MAX SCAMM
-	// dev_bias[COL] += learning_rate*temp_value/(1 + sqrt(gradient_sum[COL]));
 }
 
 __global__ void rmsprop_update_weights_(float *dev_weights, float *layer_output, float *layer_delta, float *gradient_sum, int N, int M, int K, float learning_rate, float beta){
@@ -294,7 +285,6 @@ __global__ void rmsprop_update_weights_(float *dev_weights, float *layer_output,
 	int row = threadIdx.y, col = threadIdx.x;
 	int row_in_matrix = by*BLOCK_SIZE+row;
 	int col_in_matrix = bx*BLOCK_SIZE+col;
-	// int index_in_matrix = row_in_matrix*M + col_in_matrix;
 	if(row_in_matrix < N && col_in_matrix< M){
 		float temp_value = 0;
 		for(int i=0; i < K; i+=BLOCK_SIZE){
@@ -303,6 +293,10 @@ __global__ void rmsprop_update_weights_(float *dev_weights, float *layer_output,
 			//copying to shared memory
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				for(int k=0; k < BLOCK_SIZE; ++k){
+					#if defined(FAST_RECKLESS)
+					A[j][k] = layer_output[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
+					B[j][k] = layer_delta[(i+j)*M + bx*BLOCK_SIZE+k]; //bx*BLOCK_SIZE+k -> column, i+j -> row 
+					#else
 					if(by*BLOCK_SIZE+j < N && i+k < K){
 						A[j][k] = layer_output[(by*BLOCK_SIZE+j)*K + i+k]; //i+k -> column, by*BLOCK_SIZE+j -> row 
 					}else{
@@ -313,18 +307,15 @@ __global__ void rmsprop_update_weights_(float *dev_weights, float *layer_output,
 					}else{
 						B[j][k] = 0;
 					}
-
+					#endif
 				}
 			}
-
 			//wait for completion
 			__syncthreads();
-
 			//multiply and add
 			for(int j=0; j < BLOCK_SIZE; ++j){
 				temp_value += A[row][j]*B[j][col];
 			}
-
 			__syncthreads();
 		}
 
@@ -334,12 +325,10 @@ __global__ void rmsprop_update_weights_(float *dev_weights, float *layer_output,
 		//}
 		//printf("%f\n\n", learning_rate*temp_value);
 
-
 		//should this be transposed???
 		int transposed_ind = col_in_matrix*N + row_in_matrix;
 		gradient_sum[transposed_ind] = beta*gradient_sum[transposed_ind] + (1-beta)*temp_value*temp_value;
 		dev_weights[transposed_ind] += learning_rate*temp_value/(1e-5 + sqrt(gradient_sum[transposed_ind]));
-		//NOTE : MAX SCAMM
-		// dev_weights[transposed_ind] += learning_rate*temp_value/(1 + sqrt(gradient_sum[transposed_ind]));
 	}
 }
+

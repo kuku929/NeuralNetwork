@@ -3,34 +3,26 @@
 
 #include "basic_matrix.h"
 #include "dev_vector.h"
+#include "dimension.h"
 #include <iostream>
 #include <vector>
 #include <memory>
-#include <array>
 #include <cstdio>
-#include <stdexcept>
-#include <string>
-namespace optimizer{
-	class Optimizer;
-	class RMSProp;
-}
-namespace layer{
+namespace nnet{
+class Optimizer;
+class RMSProp;
+
 class Layer : public basic_matrix<float>{
 	/*
 	 * this class inherits from basic_matrix
 	 * contains weights and bias implemented as 1-D vectors
 	 */
 	public:
-		Layer(): basic_matrix(){};
+		Layer(): basic_matrix(), dim(){};
 		Layer(int N, int M);
+		~Layer() = default;
 		void forward_pass(const dev_vector<float> &input, dev_vector<float> &output, const size_t no_of_samples);
-		// void forward_pass(const std::shared_ptr<dev_vector<float>> input, std::shared_ptr<dev_vector<float>> output, const size_t no_of_samples){
-		// 	const dev_vector<float> &input_val = *input;
-		// 	dev_vector<float> &output_val = *output;
-		// 	forward_pass(input_val, output_val, no_of_samples);
-		// }
-		
-		void back_pass(const dev_vector<float> &input, dev_vector<float> &output, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples);
+		void back_pass(const dev_vector<float> &input, dev_vector<float> &output, const size_t no_of_samples);
 		void update(const dev_vector<float> &layer_delta, std::shared_ptr<dev_vector<float>> layer_output, const size_t no_of_samples);
 		void show_bias(){
 			for(auto b : bias_){
@@ -98,10 +90,11 @@ class Layer : public basic_matrix<float>{
 		}
 
 	private:
+		Dimension dim;
 		std::vector<float> bias_;
 		std::shared_ptr<dev_vector<float>> dev_weights_;
 		std::shared_ptr<dev_vector<float>> dev_bias_;
-	friend class optimizer::RMSProp;
+	friend class nnet::RMSProp;
 };
 }
-#endif
+#endif //LAYER_H

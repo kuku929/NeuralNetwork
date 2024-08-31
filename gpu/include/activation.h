@@ -3,7 +3,7 @@
 
 #include "dev_vector.h"
 
-namespace activation{
+namespace nnet{
 class ActivationLayer{ //base class, forward_activate and back_activate need to be overridden for derived classes
 	public:
 		virtual void forward_activate(dev_vector<float> &input, dev_vector<float> &output, int no_of_samples)=0; //make it pure virtual, thus *requiring* override

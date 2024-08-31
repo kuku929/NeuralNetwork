@@ -1,7 +1,6 @@
 #include "activation.h"
 #include "dev_vector.h"
-// #include "kernel.h"
-using namespace activation;
+using namespace nnet;
 
 template<typename f_func_ptr>
 __global__ void f_activate(float *input, float *output, int N, int M, f_func_ptr activ_func){

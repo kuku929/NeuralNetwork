@@ -3,5 +3,6 @@
 /cpu/.vscode
 /gpu/data
 /gpu/.vscode
+/gpu/.cache
 /gpu_specs
 /gpu/build

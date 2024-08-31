@@ -3,15 +3,13 @@
 #include "cuNeuralNetwork.h"
 #include "dev_vector.h"
 #include "kernel.h"
+#include "softmax.h"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 #include <memory>
-#include <string>
-#include <algorithm>
-#include <cmath> //pow
-using namespace net;
-
+//#define RMSPROP
+using namespace nnet;
 void Network::add_layer(size_t back_layer_size, size_t front_layer_size)
 {
 	/*
@@ -27,8 +25,8 @@ void Network::add_layer(size_t back_layer_size, size_t front_layer_size)
 	{
 		throw std::invalid_argument("layer cannot have 0 neurons");
 	}
-
-	layers.push_back(std::make_shared<layer::Layer>(front_layer_size, back_layer_size));
+		
+	layers.push_back(std::make_shared<Layer>(front_layer_size, back_layer_size));
 
 	if (front_layer_size > max_layer_size)
 		max_layer_size = front_layer_size;
@@ -38,17 +36,25 @@ void Network::add_layer(size_t back_layer_size, size_t front_layer_size)
 	return;
 }
 
-void Network::add_activation(activation::ActivationLayer &activation_function)
+void Network::add_activation(ActivationLayer &activation_function)
 {
 	activation_layers.push_back(&activation_function);
 	return;
 }
 
-void Network::add_optimizer(optimizer::Optimizer &optimizer)
+void Network::add_optimizer(Optimizer &optimizer)
 {
 	optimizers.push_back(&optimizer);
 }
 
+void Network::add_loss(Loss &loss)
+{
+	this->loss = &loss;
+}
+void Network::add_softmax(size_t size)
+{
+	this->softmax = std::make_unique<Softmax>(size);
+}
 basic_matrix<float> Network::forward_pass(basic_matrix<float> &&input)
 {
 	return forward_pass(input);
@@ -59,19 +65,6 @@ basic_matrix<float> Network::forward_pass(basic_matrix<float> &input)
 	/*
 	 * @arguments : input matrix with dimensions : (input_layer_size, no_of_samples)
 	 *		true output with dimensions : (output_layer_size, no_of_samples)
-	 *
-	 * @brief:
-	 * finds the outputs of all the layers and stores them in layer_outputs
-	 * then, iterates backwards through layers calling the propagate() function on each one
-	 * the dev_input_delta and dev_output_delta are swapped as the input and output
-	 * to the layers to avoid copying.
-	 * therefore, they are malloc'd with the maximum size at the beginning
-	 */
-	/*
-	 * the column in input will be for one training sample, we will do input.ncols number of samples together
-	 */
-	/*
-	 * @arguments : input matrix with dimensions : (input_layer_size, no_of_samples)
 	 *
 	 * @brief:
 	 * iterates through layers calling the pass() function on each one
@@ -98,6 +91,7 @@ basic_matrix<float> Network::forward_pass(basic_matrix<float> &input)
 	// forward pass
 	for (int i = 0; i < layers.size(); ++i)
 	{
+
 		//// debug
 		// basic_matrix<float> test(layers[i]->ncols, no_of_samples);
 		// cudaMemcpy(test.data(), dev_input.data(), sizeof(float)*test.size, cudaMemcpyDeviceToHost);
@@ -107,6 +101,7 @@ basic_matrix<float> Network::forward_pass(basic_matrix<float> &input)
 		layers[i]->forward_pass(dev_input, dev_output, no_of_samples);
 		activation_layers[i]->forward_activate(dev_output, dev_input, no_of_samples);
 	}
+	
 
 	// copying to host
 	auto result = cudaMemcpy(output.data(), dev_input.begin(), sizeof(float) * output.size, cudaMemcpyDeviceToHost);
@@ -161,6 +156,9 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 		// will this workd, no it does not!
 		activation_layers[i]->forward_activate(*layer_outputs[i+1], *layer_outputs[i + 1], no_of_samples);
 	}
+	//if(softmax!=nullptr){
+		//softmax->forward_pass(*layer_outputs.back(), *layer_outputs.back(), no_of_samples);
+	//}
 
 	// //debug
 	// for(int i=0; i < layer_outputs.size(); ++i){
@@ -185,17 +183,24 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 
 	// finding the difference and transposing the resulting matrix
 	// delta will have no_of_samples rows and layer size cols
-	find_delta_and_transpose<<<dim_grid, dim_block>>>(dev_true_output.data(), layer_outputs.back()->data(), dev_input_delta.data(), true_output.nrows, true_output.ncols);
+	//find_delta_and_transpose<<<dim_grid, dim_block>>>(dev_true_output.data(), layer_outputs.back()->data(), dev_input_delta.data(), true_output.nrows, true_output.ncols);
+	loss->loss_derivative(*layer_outputs.back(), dev_true_output, dev_input_delta, no_of_samples);
 	cudaDeviceSynchronize();
 
-	// //debug
-	// std::cout << "DELTA\n";
-	// std::vector<float> o(layers.back()->nrows*no_of_samples);
-	// cudaMemcpy(o.data(), dev_input_delta.begin(), sizeof(float)*o.size(), cudaMemcpyDeviceToHost);
-	// for(const auto out : o){
-	// 	std::cout << out << ' ';
-	// }
-	// std::cout << "\n\n";
+	 ////debug
+	 //std::cout << "loss: ";
+	 //std::vector<float> o(no_of_samples);
+	 //dev_vector<float> current_loss(no_of_samples);
+	 //loss->find_loss(*layer_outputs.back(), dev_true_output, current_loss, no_of_samples);
+	 //cudaMemcpy(o.data(), current_loss.begin(), sizeof(float)*o.size(), cudaMemcpyDeviceToHost);
+	 //float delta_sum=0;
+	 //for(const auto out : o){
+		 //std::cout << out << ' ';
+		 ////delta_sum+=out;
+	 //}
+	 //std::cout << '\n';
+	 //// avg loss
+	 ////std::cout << delta_sum/no_of_samples << '\n' << std::flush;
 
 	// propogating the delta and updating weights
 	for (int i = layers.size() - 1; i > -1; --i)
@@ -213,15 +218,13 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
 		// std::cout << '\n';
 
 		activation_layers[i]->back_activate(dev_input_delta, *layer_outputs[i + 1], dev_output_delta, no_of_samples);
-		layers[i]->back_pass(dev_output_delta, dev_input_delta, layer_outputs[i], no_of_samples);
-
-		//no learning policy
+		layers[i]->back_pass(dev_output_delta, dev_input_delta, no_of_samples);
+		#if defined(RMSPROP)
+		optimizers[i]->update_weights(dev_output_delta, layer_outputs[i], no_of_samples);
+		optimizers[i]->update_bias(dev_output_delta, no_of_samples);
+		#else
 		layers[i]->update(dev_output_delta, layer_outputs[i], no_of_samples);
-
-		// // rmsprop
-		// optimizers[i]->update_weights(dev_output_delta, layer_outputs[i], no_of_samples);
-		// optimizers[i]->update_bias(dev_output_delta, no_of_samples);
-
+		#endif
 	}
 }
 

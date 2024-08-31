@@ -4,23 +4,26 @@
 #include "basic_matrix.h"
 #include "activation.h"
 #include "optimizer.h"
+#include "loss.h"
+#include "softmax.h"
 #include <iostream>
-#include <iomanip>
 #include <vector>
-#include <string>
 #include <cstdio>
-#include <cmath> //pow
 
-namespace net{
+namespace nnet{
 class Network{
 	public:
 		// right now you need an optimizer for each layer, maybe there is a better way?
 		// in the future, the back_pass of the network will be written by user in main 
-		// std::vector<layer::Layer> layers;
+		// std::vector<nnet::Layer> layers;
 		//todo : convert to this:
-		std::vector<std::shared_ptr<layer::Layer>> layers; //optimizer will also own the memory
-		std::vector<activation::ActivationLayer *> activation_layers;
-		std::vector<optimizer::Optimizer *> optimizers;
+		//todo : convert all these to m_*
+		//NOTE : softmax should be handled better
+		std::vector<std::shared_ptr<nnet::Layer>> layers; //optimizer will also own the memory
+		std::vector<nnet::ActivationLayer *> activation_layers;
+		std::vector<nnet::Optimizer *> optimizers;
+		std::unique_ptr<Softmax> softmax;
+		Loss *loss;
 
 		Network(){};
 		void add_layer(size_t front_layer_size, size_t back_layer_size);
@@ -30,8 +33,10 @@ class Network{
 		 * returns : nothing
 		 */
 
-		void add_activation(activation::ActivationLayer &activation_function);
-		void add_optimizer(optimizer::Optimizer &optimizer);
+		void add_activation(ActivationLayer &activation_function);
+		void add_optimizer(Optimizer &optimizer);
+		void add_loss(Loss &loss);
+		void add_softmax(size_t size);
 
 		void print_weights(std::ostream &out=std::cout);
 		/*
@@ -66,4 +71,4 @@ class Network{
 		size_t max_layer_size=0; 
 };
 }
-#endif
+#endif // NEURALNET_H

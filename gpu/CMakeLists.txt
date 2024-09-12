@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(rl LANGUAGES CXX CUDA)
 
 #setting flags
-set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mavx2")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -23,17 +23,17 @@ add_library(layer ./src/layer.cu)
 add_library(kernel ./src/kernel.cu)
 add_library(loss ./src/loss.cu)
 add_library(softmax ./src/softmax.cu)
+add_library(debug_util ./utils/debug.cu)
 
-set_source_files_properties(main.cpp PROPERTIES LANGUAGE CUDA)
-add_executable(main main.cpp)
-target_link_libraries(layer kernel)
-target_link_libraries(optimizer kernel layer)
-target_link_libraries(neuralnet layer activation optimizer loss)
-target_link_libraries(main neuralnet activation optimizer datareader)
+set_source_files_properties(mnist.cpp PROPERTIES LANGUAGE CUDA)
+add_executable(main mnist.cpp)
+target_link_libraries(layer kernel debug_util)
+target_link_libraries(optimizer layer)
+target_link_libraries(neuralnet activation optimizer loss softmax)
+target_link_libraries(main neuralnet datareader)
 
 #cuda files settings
 set_target_properties(neuralnet PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-# should work but is slower
-#set_property(TARGET kernel PROPERTY CUDA_ARCHITECTURES native)
-
+# debug mode
+add_compile_definitions("$<$<CONFIG:DEBUG>:-DDEBUG>")

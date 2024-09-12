@@ -9,4 +9,4 @@
 - test GPU performance 
 
 ## DOING
-- add sigmoid
+- improving performance

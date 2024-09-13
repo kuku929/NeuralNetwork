@@ -1,3 +1,9 @@
+/*
+ *@Author: Krutarth Patel
+ *@Date: 13th september 2024
+ *@Description : definition of the basic_matrix class
+ */
+
 #pragma once
 #include <array>
 #include <cstdio>
@@ -47,8 +53,8 @@ template <class T> class basic_matrix
          */
         if (i >= nrows || j >= ncols)
         {
-            throw std::out_of_range("index : " + std::to_string(i) + ' ' +
-                                    std::to_string(j) + " out of bounds");
+            throw std::out_of_range("index : " + std::to_string(i) + ' ' + std::to_string(j) +
+                                    " out of bounds");
         }
         return data_[i * ncols + j];
     }
@@ -59,8 +65,8 @@ template <class T> class basic_matrix
          */
         if (i >= nrows || j >= ncols)
         {
-            throw std::out_of_range("index : " + std::to_string(i) + ' ' +
-                                    std::to_string(j) + " out of bounds");
+            throw std::out_of_range("index : " + std::to_string(i) + ' ' + std::to_string(j) +
+                                    " out of bounds");
         }
         return data_[i * ncols + j];
     }
@@ -103,8 +109,7 @@ template <class T> class basic_matrix
          */
         for (int i = 0; i < ncols; ++i)
         {
-            T min_value = std::numeric_limits<T>::max(),
-              max_value = std::numeric_limits<T>::min();
+            T min_value = std::numeric_limits<T>::max(), max_value = std::numeric_limits<T>::min();
             T val;
             for (int j = 0; j < nrows; ++j)
             {
@@ -116,8 +121,7 @@ template <class T> class basic_matrix
             }
             for (int j = 0; j < nrows; ++j)
             {
-                get(j, i) =
-                    (get(j, i) - min_value) / (max_value - min_value); //- 0.5;
+                get(j, i) = (get(j, i) - min_value) / (max_value - min_value); //- 0.5;
             }
         }
     }

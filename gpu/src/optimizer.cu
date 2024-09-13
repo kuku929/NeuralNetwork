@@ -1,3 +1,9 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : definition of the Optimizer class
+ */
+
 #include "debug.h"
 #include "kernel.h"
 #include "layer.h"
@@ -56,15 +62,6 @@ void RMSProp::update_bias(Layer *layer, const dev_vector<float> &layer_delta,
     cudaDeviceSynchronize();
     // __END_TIMER__
 
-    // auto result = cudaMemcpy(this->data(), dev_weights_->data(),
-    // sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost); if(result != cudaSuccess){ throw
-    // std::runtime_error("failed to copy to host!");
-    //}
-    // result = cudaMemcpy(this->bias(), dev_bias_->data(), sizeof(float)*dev_bias_->size(),
-    // cudaMemcpyDeviceToHost); if(result != cudaSuccess){ throw std::runtime_error("failed to copy
-    // to host!");
-    //}
-
     return;
 }
 
@@ -77,23 +74,11 @@ void RMSProp::update_weights(Layer *layer, const dev_vector<float> &layer_delta,
     dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE);
     dim3 dim_grid((layer->nrows + dim_block.x - 1) / dim_block.x,
                   (layer->ncols + dim_block.y - 1) / dim_block.y);
-    // test_kernel<<<1,1>>>(dev_grad_weights_->data());
-    // std::cout << "testing layer: " << this->layer->nrows <<  ' ' << this->layer->ncols << '\n';
     rmsprop_update_weights_<<<dim_grid, dim_block>>>(
         layer->dev_weights_->data(), layer_output->data(), layer_delta.data(),
         dev_grad_weights_->data(), layer->ncols, layer->nrows, no_of_samples, learning_rate, beta);
     cudaDeviceSynchronize();
     // __END_TIMER__
-
-    // do i need to do this?
-    //  auto result = cudaMemcpy(this->data(), dev_weights_->data(),
-    //  sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost); if(result != cudaSuccess){
-    //  	throw std::runtime_error("failed to copy to host!");
-    //  }
-    //  result = cudaMemcpy(this->bias(), dev_bias_->data(), sizeof(float)*dev_bias_->size(),
-    //  cudaMemcpyDeviceToHost); if(result != cudaSuccess){ 	throw std::runtime_error("failed to
-    //  copy to host!");
-    //  }
 
     return;
 }

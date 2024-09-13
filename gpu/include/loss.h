@@ -1,5 +1,10 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : declaration of the Loss class
+ */
+
 #pragma once
-#include "debug.h"
 #include "dev_vector.h"
 #include <memory>
 typedef std::shared_ptr<dev_vector<float>> dev_ptr;
@@ -60,8 +65,7 @@ class CrossEntropyLoss : public Loss
     {
         __host__ __device__ float operator()(float prediction, float actual)
         {
-            // entropy
-            // prediction should be softmaxxed
+            // NOTE: prediction should be softmaxxed
             if (actual == 1.0f)
                 return -log(prediction);
             return -log(1 - prediction);
@@ -72,7 +76,7 @@ class CrossEntropyLoss : public Loss
     {
         __host__ __device__ float operator()(float prediction, float actual)
         {
-            // prediction should be softmaxxed
+            // NOTE: prediction should be softmaxxed
             // actual MUST be one hot encoded
             return actual - prediction;
         }

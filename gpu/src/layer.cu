@@ -1,5 +1,10 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : definition of the Layer class
+ */
+
 #include "debug.h"
-#include "dev_vector.h"
 #include "kernel.h"
 #include "layer.h"
 #include "optimizer.h"
@@ -16,23 +21,22 @@ extern const int BLOCK_SIZE;
 #define set(a, b) set(a, b, __LINE__, __FILE_NAME__)
 #endif
 
-// #define __START_TIMER__  float gpu_elapsed_time_ms; \
-// 	cudaEvent_t start, stop; \
-// 	cudaEventCreate(&start); \
-// 	cudaEventCreate(&stop); \
-// 	cudaEventRecord(start, 0); \
+ #define __START_TIMER__  float gpu_elapsed_time_ms; \
+	 cudaEvent_t start, stop; \
+	 cudaEventCreate(&start); \
+	 cudaEventCreate(&stop); \
+	 cudaEventRecord(start, 0); \
 
-// #define __END_TIMER__ cudaEventRecord(stop, 0); \
-// 	cudaEventSynchronize(stop); \
-// 	cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop); \
-// 	std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n"; \
+ #define __END_TIMER__ cudaEventRecord(stop, 0); \
+	 cudaEventSynchronize(stop); \
+	 cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop); \
+	 std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n"; \
 
 Layer::Layer(int N, int M, Optimizer &optimizer) : basic_matrix(N, M), BaseLayer(M, N)
 {
     bias_.resize(N);
     float range = 2.0f;
     // initializing random values
-    // todo : make initialization gpu
     for (size_t i = 0; i < dim.second; ++i)
     {
         this->get_bias(i) = 0.0f; // bias for the next layer
@@ -50,7 +54,7 @@ Layer::Layer(int N, int M, Optimizer &optimizer) : basic_matrix(N, M), BaseLayer
 
     dev_bias_ = shared_dev_vector(dim.second, 1);
     dev_bias_->set(this->bias(), dim.second);
-    // // initializing optimizer
+	 // initializing optimizer
     m_optimizer = optimizer.clone();
     m_optimizer->initialize(dim);
 }
@@ -59,13 +63,8 @@ std::shared_ptr<dev_vector<float>> Layer::forward_pass(
     const std::shared_ptr<dev_vector<float>> input, const size_t no_of_samples)
 {
     /*
-     * @argument : Layer object
-     *		input to layer
-     *		dev_vector to store the output( memory should be allocated )
-     *		no of samples to be processed
-     * @brief :
-     * forward pass of the input through the layer given, stores output in
-     *provided memory. calls gemm_function kernel to do parallel processing
+     * @brief forward pass of the input through the layer given, 
+     * calls gemm kernel to do parallel processing
      * using cache-tiled multiplication
      */
 
@@ -74,6 +73,7 @@ std::shared_ptr<dev_vector<float>> Layer::forward_pass(
     // dev_vector<float> weights(this);
     // dev_vector<float> bias(dim.second);
     // bias.set(this->bias(), dim.second);
+
     layer_input = input;
     layer_output = shared_dev_vector(dim.second, no_of_samples);
 
@@ -84,14 +84,6 @@ std::shared_ptr<dev_vector<float>> Layer::forward_pass(
     gemm<<<dim_grid, dim_block>>>(dev_weights_->data(), input->data(), dev_bias_->data(),
                                   layer_output->data(), dim.second, no_of_samples, dim.first);
 
-    // //debug
-    // std::cout << "forward_pass weights:\n";
-    // basic_matrix<float> h_output(dim.second, dim.first);
-    // cudaMemcpy(h_output.data(), dev_weights_->data(),
-    // sizeof(float)*dev_weights_->size(), cudaMemcpyDeviceToHost);
-    // h_output.show(); std::cout << "forward_pass weights end--\n";
-    // cudaDeviceSynchronize();
-
     // __END_TIMER__
 
     return layer_output;
@@ -101,22 +93,12 @@ std::shared_ptr<dev_vector<float>> Layer::back_pass(const std::shared_ptr<dev_ve
                                                     const size_t no_of_samples)
 {
     /*
-     * @argument : Layer object
-     *		input to layer of dim(no_of_samples, layer.dim.first)
-     *		dev_vector to store the output( memory should be allocated )
-     * 		layer output of the back-nodes
-     *		no of samples to be processed
      * @brief :
      * backward pass of the input through the layer given, stores output in
-     *provided memory. calls matmul_funcmul kernel to do parallel processing
+     * provided memory. calls matmul kernel to do parallel processing
      * using cache-tiled multiplication
-     * once pass is done, updates the layer's weights and bias using
-     *layer_output and input by calling update_layer()
+     * once pass is done, updates the layer's weights and bias 
      */
-    // copying data to gpu
-    // dev_vector<float> weights(this);
-    // dev_vector<float> bias(dim.second);
-    // bias.set(this->bias(), dim.second);
     auto back_output = shared_dev_vector(get_shape().first, no_of_samples);
     // launching kernel
     const size_t input_cols = dim.second;
@@ -130,26 +112,17 @@ std::shared_ptr<dev_vector<float>> Layer::back_pass(const std::shared_ptr<dev_ve
 
     cudaDeviceSynchronize();
     update(input, no_of_samples);
-    // note : do not forget that the output matrix is transposed (no_of_samples,
-    // cols)
     return back_output;
 }
 
 void Layer::update(const std::shared_ptr<dev_vector<float>> &layer_delta,
                    const size_t no_of_samples)
 {
-    /* @arguments : Layer object
-     * 		weights in device memory
-     * 		bias in device memory
-     *		deltas for that layer
-     * 		output of the previous layer during forward pass/input to the
-     *      current layer
-     *      no of samples being trained concurrently
-     *
+    /* 
      * @brief :
-     * calls two kernels, update_weights() and update_bias() to update the layer
-     * cache-tiled multiplication used to update the weights
-     * after updating, the new weights and bias are copied to host
+	 * uses update_bias() and update_weights if SWITCH_OPTIMIZER set,
+	 * else uses the provided optimizer. Useful if you
+	 * want to switch optimizers while training
      */
     //  __START_TIMER__
     float learning_rate = 0.09f;

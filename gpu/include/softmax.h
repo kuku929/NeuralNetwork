@@ -1,3 +1,9 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : declaration of the Softmax class
+ */
+
 #ifndef SOFTMAX_H
 #define SOFTMAX_H
 #include "base_layer.h"
@@ -10,7 +16,6 @@ namespace nnet
 class Softmax : public BaseLayer
 {
   public:
-    // Softmax(): BaseLayer(){};
     Softmax(size_t size) : BaseLayer(size)
     {
     }

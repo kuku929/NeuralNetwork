@@ -1,9 +1,14 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : declaration of the Layer class
+ */
+
 #ifndef LAYER_H
 #define LAYER_H
 
 #include "base_layer.h"
 #include "basic_matrix.h"
-#include "debug.h"
 #include "dev_vector.h"
 #include <iostream>
 #include <memory>
@@ -23,13 +28,21 @@ class Layer : public basic_matrix<float>, public BaseLayer
      * contains weights and bias implemented as 1-D vectors
      */
   public:
-    // Layer(): basic_matrix(), BaseLayer(){};
     Layer(int N, int M, Optimizer &optimizer);
     ~Layer() = default;
     dev_ptr forward_pass(const dev_ptr input, const size_t no_of_samples) override;
+	/*
+	 * forward pass through the layer
+	 */
     dev_ptr back_pass(const dev_ptr input, const size_t no_of_samples) override;
+	/*
+	 * backward pass through the layer
+	 */
 
     void update(const dev_ptr &layer_delta, const size_t no_of_samples);
+	/*
+	 * update weights and bias
+	 */
 
     void show_bias()
     {
@@ -94,6 +107,9 @@ class Layer : public basic_matrix<float>, public BaseLayer
     }
 
     void copy_to_host();
+	/*
+	 * copy weights and bias to host memory
+	 */
 
     void show_dev()
     {

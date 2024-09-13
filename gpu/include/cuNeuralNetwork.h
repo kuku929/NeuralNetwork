@@ -1,3 +1,11 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : declaration of the Network class
+ * 				 the end user imports this file in
+ * 				 their script
+ */
+
 #ifndef NEURALNET_H
 #define NEURALNET_H
 #include "activation.h"
@@ -16,55 +24,62 @@ namespace nnet
 class Network
 {
   public:
-    // right now you need an optimizer for each layer, maybe there is a better way?
-    // in the future, the back_pass of the network will be written by user in main
-    // std::vector<nnet::Layer> layers;
-    // todo : convert all these to m_*
-    // NOTE : softmax should be handled better
-
     Network()
     {
     }
     void add_layer(size_t front_layer_size, size_t back_layer_size, Optimizer &&optimizer);
     /*
-     * adds a layer to the network
-     * input : size of the layer, activation function for that layer
-     * returns : nothing
+     *@brief  adds a layer to the network stack
+     *@params size of the layer, optimizer
+     *@return void
      */
-
     void add_activation(ActivationLayer &&activation_function);
-    void add_optimizer(Optimizer &optimizer);
+	/*
+     *@brief  adds an activation layer to the network stack
+     *@params activation function 
+     *@return void
+     */
     void add_loss(Loss &loss);
+	/*
+     *@brief  adds a loss function to the network stack
+     *@params loss function
+     *@return void
+     */
     void add_softmax(size_t size);
+	/*
+     *@brief  adds a softmax layer to the network stack
+     *@params size of the layer, usually the output size
+     *@return void
+     */
     void print_weights(std::ostream &out = std::cout);
     /*
-     * prints weights in an orderly manner
-     * input : buffer to print to
-     * returns : nothing
+     *@brief prints weights in an orderly manner
+     *@params buffer to print to
+     *@return void
      */
-
     basic_matrix<float> forward_pass(basic_matrix<float> &&input);
+    /*
+     * convenience function
+     */
     basic_matrix<float> forward_pass(basic_matrix<float> &input);
     /*
-     * one forward pass through the layers
-     * input : input data to the neural network
-     * returns : output of the network as a vector
+     *@brief forward pass through the layers
+     *@params input data with no_of_samples columns
+     *@return output of the network
      */
     void backward_pass(basic_matrix<float> &input, basic_matrix<float> &true_output);
     /*
-     * one backward pass through the layers
-     * input : input data to the neural network, true output for the input given
-     * returns : nothing
+     *@brief backward pass through the layers
+     *@params input data, true value
+     *@returns : void, will update layer weights
      */
 
   private:
-    std::vector<std::shared_ptr<Layer>> layers; // optimizer will also own the memory
-    std::vector<std::shared_ptr<dev_vector<float>>> layer_outputs;
-    std::vector<std::shared_ptr<BaseLayer>> layer_stack;
-    std::vector<nnet::ActivationLayer *> activation_layers;
-    std::unique_ptr<Softmax> softmax;
+    std::vector<std::shared_ptr<Layer>> m_layers; 
+    std::vector<std::shared_ptr<dev_vector<float>>> m_layer_outputs;
+    std::vector<std::shared_ptr<BaseLayer>> m_layer_stack;
+    std::unique_ptr<Softmax> m_softmax;
     Loss *loss;
-    size_t max_layer_size = 0;
 };
 } // namespace nnet
 #endif // NEURALNET_H

@@ -1,4 +1,10 @@
-#include "basic_matrix.h"
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : definition of the Loss class
+ */
+
+#include "debug.h"
 #include "dev_vector.h"
 #include "loss.h"
 using namespace nnet;
@@ -12,6 +18,10 @@ template <typename loss_func>
 __global__ void find_loss_T(float *prediction, float *actual, float *output, size_t no_of_samples,
                             size_t size, loss_func loss)
 {
+	/*
+	 *@brief finds loss using the loss_func provided. 
+	 *  	prediction/actual have dimensions=(size, no_of_samples)
+	 */
     int col = threadIdx.x;
     float temp;
     for (int i = col; i <= (size - 1) * no_of_samples + col; i += no_of_samples)
@@ -25,11 +35,10 @@ template <typename loss_func>
 __global__ void find_loss_(float *prediction, float *actual, float *output, size_t no_of_samples,
                            size_t size, loss_func loss)
 {
-    /*
-     * am i tripping or this function is wrong??
-     * true output has (size, no_of_samples) dim
-     * right??
-     */
+	/*
+	 *@brief finds loss using the loss_func provided. 
+	 *  	prediction/actual have dimensions=(no_of_samples, size)
+	 */
     int row = threadIdx.x;
     float temp;
     for (int i = row * size; i < (row + 1) * size; ++i)
@@ -43,13 +52,6 @@ template <typename loss_func>
 __global__ void find_loss_derivative_(float *prediction, float *actual, float *output,
                                       size_t no_of_samples, size_t size, loss_func loss_deriv)
 {
-    // NOTE : i am transposing right now, but need to think of a better way. row
-    // is the row in input BROOOOOOOOOOOOOO THIS IS SHIT I NEED TO DO SOMETHING!
-    // figuring out the correct dimensions is a PAIN IN THE ASS
-    // think of a way so that my code is dimension independant or they are
-    // implicitly handled OVER AND OUT -- graph theory tmrw ;<
-    // Damn, I had a panic attack right here,. futures bad-08/09/24
-
     int row = threadIdx.x;
     int col = blockIdx.x;
     int index_in_matrix = row * no_of_samples + col;
@@ -103,10 +105,4 @@ dev_ptr CrossEntropyLoss::loss_derivative(dev_vector<float> &prediction, dev_vec
                                                    no_of_samples, size, cross_entropy_loss_der_);
     cudaDeviceSynchronize();
     return output;
-
-    ////debug
-    // basic_matrix<float> o(size, no_of_samples);
-    // cudaMemcpy(o.data(), prediction_softmax.begin(), sizeof(float) * o.size,
-    //            cudaMemcpyDeviceToHost);
-    // o.show();
 }

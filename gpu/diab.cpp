@@ -1,9 +1,5 @@
-// #include "activation.h"
-// #include "basic_matrix.h"
 #include "cuNeuralNetwork.h"
 #include "data_reader.h"
-// #include "layer.h"
-// #include "optimizer.h"
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -12,6 +8,7 @@ int main()
     // testing diabetes
 
     // getting data
+    // NOTE: change to your path!
     nnet::DataReader reader("../data/diabetes.csv");
     reader.tokenize_data();
     auto data_mat = reader.convert_to_matrix(16, reader.ncols());

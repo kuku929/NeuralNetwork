@@ -1,3 +1,9 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : definition of the ActivationLayer class
+ */
+
 #ifndef ACTIVATION_H
 #define ACTIVATION_H
 
@@ -9,10 +15,19 @@ typedef std::shared_ptr<dev_vector<float>> dev_ptr;
 namespace nnet
 {
 class ActivationLayer : public BaseLayer
-{ // base class, forward_activate and back_activate need to be overridden for
-    // derived classes
+{ 
+	 /*
+	  * @brief
+	  * special base class
+	  * the shape of the activation layer
+	  * is (n, n) like so:
+	  *
+	  * #--#
+	  * #--#
+	  * #--#
+	  *
+	  */
   public:
-    // ActivationLayer(){}
     ActivationLayer(size_t size) : BaseLayer(size){};
     ActivationLayer(Shape &shape) : BaseLayer(shape){};
     virtual std::shared_ptr<ActivationLayer> clone() = 0;
@@ -27,7 +42,6 @@ class Linear final : public ActivationLayer
     Linear(Linear &activation) : ActivationLayer(activation.dim)
     {
     }
-    // Linear() = default;
     Linear(size_t s) : ActivationLayer(s){};
     ~Linear() = default;
     dev_ptr forward_pass(dev_ptr input, size_t no_of_samples) override;
@@ -43,7 +57,6 @@ class Linear final : public ActivationLayer
 class Sigmoid final : public ActivationLayer
 {
   public:
-    // Sigmoid() = default;
     Sigmoid(Sigmoid &activation) : ActivationLayer(activation.dim)
     {
     }
@@ -57,6 +70,10 @@ class Sigmoid final : public ActivationLayer
         auto ptr = std::make_shared<Sigmoid>(*this);
         return ptr;
     }
+	// these structs are passed to the kernel. 
+	// they hold the expression for the functions
+	// Forward is used during forward_pass
+	// Backward is used during back_pass
     struct SigmoidForward
     {
         __host__ __device__ float operator()(float input)
@@ -81,7 +98,6 @@ class ReLU final : public ActivationLayer
     ReLU(ReLU &activation) : ActivationLayer(activation.dim)
     {
     }
-    // ReLU() = default;
     ReLU(size_t s) : ActivationLayer(s){};
     ~ReLU() = default;
     dev_ptr forward_pass(dev_ptr input, size_t no_of_samples) override;
@@ -92,6 +108,10 @@ class ReLU final : public ActivationLayer
         auto ptr = std::make_shared<ReLU>(*this);
         return ptr;
     }
+	// these structs are passed to the kernel. 
+	// they hold the expression for the functions
+	// Forward is used during forward_pass
+	// Backward is used during back_pass
     struct ReLUForward
     {
         __host__ __device__ float operator()(float input)

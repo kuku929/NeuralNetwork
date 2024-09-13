@@ -1,3 +1,9 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : definition of the ActivationLayer class
+ */
+
 #include "activation.h"
 #include "dev_vector.h"
 #include <memory>
@@ -21,11 +27,6 @@ __global__ void f_activate(const float *input, float *output, int N, int M,
     int index = row_in_matrix * M + col_in_matrix;
     if (row_in_matrix < N && col_in_matrix < M)
     {
-
-        // //debug
-        // if(index == 2)
-        // 	printf("testing : %f\n", input[0]);
-
         output[index] = activ_func(input[index]);
     }
 }
@@ -50,16 +51,8 @@ __global__ void b_activate(const float *input, float *layer_output,
     {
         output[index] = activ_func(input[index], layer_output[t_index]);
 
-        // //debug
-        // if(index == 1){
-        // 	printf("back_actviate : %f\n", layer_output[t_index]);
-        // }
     }
 
-    // //debug
-    // if(index == 0){
-    // 	printf("testing : %f\n", output[t_index]);
-    // }
 }
 
 dev_ptr Linear::forward_pass(const dev_ptr input, size_t no_of_samples)

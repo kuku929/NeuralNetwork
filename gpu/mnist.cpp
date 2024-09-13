@@ -10,12 +10,14 @@ int main()
     int no_of_samples = 64;
     int epochs = 1000;
 
+    // NOTE: change to your path!
     auto train_images_in = "../data/mnist_train_images_filtered";
     auto train_labels_in = "../data/mnist_train_labels_filtered";
 
     // images
     nnet::DataReader reader(train_images_in, ' ');
     reader.tokenize_data();
+    auto sampler = [no_of_samples](const size_t index) { return size_t(rand() % no_of_samples); };
     auto train_images = reader.convert_to_matrix(no_of_samples, reader.ncols());
     train_images.transpose();
 
@@ -48,31 +50,11 @@ int main()
 
     auto loss = nnet::CrossEntropyLoss(output_size);
     net.add_loss(loss);
-    // std::cout << "before :\n";
-    // auto o = net.forward_pass(train_images);
-    // o.show();
 
     // training
     for (int i = 0; i < epochs; ++i)
     {
+        std::cout << i << ' ';
         net.backward_pass(train_images, train_labels);
     }
-
-    // testing
-    std::cout << "after :\n";
-    auto o = net.forward_pass(train_images);
-    float net_loss = 0.0f;
-    for (int i = 0; i < o.nrows; ++i)
-    {
-        for (int j = 0; j < o.ncols; ++j)
-        {
-            net_loss =
-                (o.get(i, j) - train_labels.get(i, j)) * (o.get(i, j) - train_labels.get(i, j));
-        }
-    }
-
-    std::cout << "MSE: " << net_loss << std::endl;
-    // o.show();
-    // std::cout << "actual values : \n";
-    // train_labels.show();
 }

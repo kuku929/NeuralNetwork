@@ -1,11 +1,18 @@
+/*
+ *@Author: Krutarth Patel
+ *@Date: 13th september 2024
+ *@Description : declaration of the DataReader class
+ */
+
 #include "basic_matrix.h"
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
-
+typedef std::function<size_t(const size_t)> sampler_ptr;
 namespace nnet
 {
 enum FieldTypes
@@ -21,7 +28,7 @@ class DataField
     DataField() : start_(nullptr), size(0)
     {
     }
-    DataField(char *start, size_t size) : start_(start), size(size){};
+    DataField(char *start, size_t size) : start_(start), size(size) {};
     template <typename T = std::string> T get()
     {
         // NOTE : no safety checks, use with caution
@@ -120,9 +127,9 @@ class DataReader
         return tokenized_data_[row_ind].get_field<T>(col_ind + col_start_);
     }
     void tokenize_data();
-    basic_matrix<float> convert_to_matrix(size_t rows, size_t cols);
-    template <typename T>
-    std::vector<T> get_col(size_t col_ind, size_t nrows = 0)
+    basic_matrix<float> convert_to_matrix(
+        size_t rows, size_t cols, sampler_ptr func = [](const size_t ind) { return ind; });
+    template <typename T> std::vector<T> get_col(size_t col_ind, size_t nrows = 0)
     {
         if (nrows == 0)
         {

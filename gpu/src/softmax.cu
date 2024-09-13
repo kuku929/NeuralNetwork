@@ -1,3 +1,9 @@
+/*
+ *@Author: Krutarth Patel                                           
+ *@Date: 13th september 2024
+ *@Description : definition of the Softmax class
+ */
+
 #include "dev_vector.h"
 #include "softmax.h"
 using namespace nnet;
@@ -9,7 +15,7 @@ __global__ void softmax_(const float *input, float *output,
     int col = blockIdx.x;
     double sum = 0;
     int index_in_matrix = row * no_of_samples + col;
-    // note : each thread calculates this, make it shared?
+    // NOTE : each thread calculates this, make it shared?
     // iterate through the column
     for (int i = col; i < size * no_of_samples + col; i += no_of_samples)
     {

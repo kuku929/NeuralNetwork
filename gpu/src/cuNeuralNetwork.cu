@@ -1,9 +1,7 @@
 /*
- *@Author: Krutarth Patel                                           
+ *@Author: Krutarth Patel
  *@Date: 13th september 2024
  *@Description : definition of the Network class
- * 				 the end user imports this file in
- * 				 their script
  */
 
 #include "activation.h"
@@ -29,7 +27,7 @@ void Network::add_layer(size_t front_layer_size, size_t back_layer_size, Optimiz
 
     std::shared_ptr<Layer> layer_ptr =
         std::make_shared<Layer>(back_layer_size, front_layer_size, optimizer);
-	// storing linear layers separately for printing weights
+    // storing linear layers separately for printing weights
     m_layers.push_back(layer_ptr);
     m_layer_stack.push_back(layer_ptr);
     return;
@@ -60,15 +58,15 @@ basic_matrix<float> Network::forward_pass(basic_matrix<float> &&input)
 basic_matrix<float> Network::forward_pass(basic_matrix<float> &input)
 {
     /*
-     * @arguments : input matrix with dimensions : (input_layer_size, no_of_samples) 
-	 * 				true output with dimensions : (output_layer_size, no_of_samples)
+     * @arguments : input matrix with dimensions : (input_layer_size, no_of_samples)
+     * 				true output with dimensions : (output_layer_size, no_of_samples)
      *
      * @brief:
-     * iterates through layers calling the forward_pass() function on each 
-	 * layer
+     * iterates through layers calling the forward_pass() function on each
+     * layer
      */
 
-	// input dimensions should match
+    // input dimensions should match
     if (input.nrows != m_layer_stack.front()->get_shape().first)
     {
         throw std::invalid_argument("dimensions do not match!");
@@ -99,16 +97,16 @@ basic_matrix<float> Network::forward_pass(basic_matrix<float> &input)
 void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &true_output)
 {
     /*
-     * @arguments : input matrix with dimensions : (input_layer_size, *no_of_samples) 
-	 * 				true output with dimensions : (output_layer_size, *no_of_samples)
+     * @arguments : input matrix with dimensions : (input_layer_size, *no_of_samples)
+     * 				true output with dimensions : (output_layer_size, *no_of_samples)
      *
      * @brief: iterates backwards through the stack
-	 * 			calling back_pass on each layer
-	 * 			
+     * 			calling back_pass on each layer
+     *
      */
 
-	 //the column in input will be for one training sample 
-	 //doing input.ncols number of samples together
+    // the column in input will be for one training sample
+    // doing input.ncols number of samples together
     const size_t no_of_samples = input.ncols;
     forward_pass(input);
 
@@ -145,8 +143,8 @@ void Network::backward_pass(basic_matrix<float> &input, basic_matrix<float> &tru
     // cleaning up allocated memory
     for (auto layer : m_layer_stack)
     {
-		// as all shared_ptrs are null'd, 
-		// memory will get freed
+        // as all shared_ptrs are null'd,
+        // memory will get freed
         layer->make_shared_ptr_null();
     }
 }

@@ -4,7 +4,7 @@ Only Linux is supported for now.
 
 # Install
 
-for both cpu and gpu, the following instrucitons apply   
+for both cpu and gpu, the following instructions apply   
 assuming you are building for gpu: 
 1. make a build directory inside gpu/
   ```bash

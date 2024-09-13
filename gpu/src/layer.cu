@@ -1,5 +1,5 @@
 /*
- *@Author: Krutarth Patel                                           
+ *@Author: Krutarth Patel
  *@Date: 13th september 2024
  *@Description : definition of the Layer class
  */
@@ -21,16 +21,18 @@ extern const int BLOCK_SIZE;
 #define set(a, b) set(a, b, __LINE__, __FILE_NAME__)
 #endif
 
- #define __START_TIMER__  float gpu_elapsed_time_ms; \
-	 cudaEvent_t start, stop; \
-	 cudaEventCreate(&start); \
-	 cudaEventCreate(&stop); \
-	 cudaEventRecord(start, 0); \
+#define __START_TIMER__                                                                            \
+    float gpu_elapsed_time_ms;                                                                     \
+    cudaEvent_t start, stop;                                                                       \
+    cudaEventCreate(&start);                                                                       \
+    cudaEventCreate(&stop);                                                                        \
+    cudaEventRecord(start, 0);
 
- #define __END_TIMER__ cudaEventRecord(stop, 0); \
-	 cudaEventSynchronize(stop); \
-	 cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop); \
-	 std::cout << "gpu time : " << gpu_elapsed_time_ms <<"ms\n"; \
+#define __END_TIMER__                                                                              \
+    cudaEventRecord(stop, 0);                                                                      \
+    cudaEventSynchronize(stop);                                                                    \
+    cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);                                       \
+    std::cout << "gpu time : " << gpu_elapsed_time_ms << "ms\n";
 
 Layer::Layer(int N, int M, Optimizer &optimizer) : basic_matrix(N, M), BaseLayer(M, N)
 {
@@ -54,7 +56,7 @@ Layer::Layer(int N, int M, Optimizer &optimizer) : basic_matrix(N, M), BaseLayer
 
     dev_bias_ = shared_dev_vector(dim.second, 1);
     dev_bias_->set(this->bias(), dim.second);
-	 // initializing optimizer
+    // initializing optimizer
     m_optimizer = optimizer.clone();
     m_optimizer->initialize(dim);
 }
@@ -63,7 +65,7 @@ std::shared_ptr<dev_vector<float>> Layer::forward_pass(
     const std::shared_ptr<dev_vector<float>> input, const size_t no_of_samples)
 {
     /*
-     * @brief forward pass of the input through the layer given, 
+     * @brief forward pass of the input through the layer given,
      * calls gemm kernel to do parallel processing
      * using cache-tiled multiplication
      */
@@ -97,7 +99,7 @@ std::shared_ptr<dev_vector<float>> Layer::back_pass(const std::shared_ptr<dev_ve
      * backward pass of the input through the layer given, stores output in
      * provided memory. calls matmul kernel to do parallel processing
      * using cache-tiled multiplication
-     * once pass is done, updates the layer's weights and bias 
+     * once pass is done, updates the layer's weights and bias
      */
     auto back_output = shared_dev_vector(get_shape().first, no_of_samples);
     // launching kernel
@@ -118,11 +120,11 @@ std::shared_ptr<dev_vector<float>> Layer::back_pass(const std::shared_ptr<dev_ve
 void Layer::update(const std::shared_ptr<dev_vector<float>> &layer_delta,
                    const size_t no_of_samples)
 {
-    /* 
+    /*
      * @brief :
-	 * uses update_bias() and update_weights if SWITCH_OPTIMIZER set,
-	 * else uses the provided optimizer. Useful if you
-	 * want to switch optimizers while training
+     * uses update_bias() and update_weights if SWITCH_OPTIMIZER set,
+     * else uses the provided optimizer. Useful if you
+     * want to switch optimizers while training
      */
     //  __START_TIMER__
     float learning_rate = 0.09f;

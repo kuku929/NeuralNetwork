@@ -1,5 +1,5 @@
 /*
- *@Author: Krutarth Patel                                           
+ *@Author: Krutarth Patel
  *@Date: 13th september 2024
  *@Description : definition of the base_layer class
  * 				meant to be inherited by other layers
@@ -14,17 +14,17 @@ namespace nnet
 {
 class Shape
 {
-	/*@brief
-	 * shape of the layer
-	 * for a linear layer like:
-	 * #\
-	 *   \ 
-	 * #--#
-	 *   /
-	 * #/
-	 *
-	 * the shape is : (second=1, first = 3)
-	 */
+    /*@brief
+     * shape of the layer
+     * for a linear layer like:
+     * #\
+     *   \
+     * #--#
+     *   /
+     * #/
+     *
+     * the shape is : (second=1, first = 3)
+     */
   public:
     Shape(size_t first, size_t second) : first(first), second(second) {};
     Shape(size_t first) : first(first), second(first) {};
@@ -39,12 +39,12 @@ class Shape
 
 class BaseLayer
 {
-	/*
-	 * @brief
-	 * base class for all layers.
-	 * a derived layer should override the
-	 * forward_pass and back_pass functions
-	 */
+    /*
+     * @brief
+     * base class for all layers.
+     * a derived layer should override the
+     * forward_pass and back_pass functions
+     */
   public:
     BaseLayer(size_t first, size_t second) : dim(first, second)
     {
@@ -78,8 +78,10 @@ class BaseLayer
 
   protected:
     Shape dim;
-    std::shared_ptr<dev_vector<float>> layer_output = nullptr; // stores the output of the last forward_pass
-    std::shared_ptr<dev_vector<float>> layer_input = nullptr; // stores the input of the last forward_pass
+    std::shared_ptr<dev_vector<float>> layer_output =
+        nullptr; // stores the output of the last forward_pass
+    std::shared_ptr<dev_vector<float>> layer_input =
+        nullptr; // stores the input of the last forward_pass
 };
 } // namespace nnet
 #endif // DIMENSION_H

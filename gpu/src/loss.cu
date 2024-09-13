@@ -1,5 +1,5 @@
 /*
- *@Author: Krutarth Patel                                           
+ *@Author: Krutarth Patel
  *@Date: 13th september 2024
  *@Description : definition of the Loss class
  */
@@ -18,10 +18,10 @@ template <typename loss_func>
 __global__ void find_loss_T(float *prediction, float *actual, float *output, size_t no_of_samples,
                             size_t size, loss_func loss)
 {
-	/*
-	 *@brief finds loss using the loss_func provided. 
-	 *  	prediction/actual have dimensions=(size, no_of_samples)
-	 */
+    /*
+     *@brief finds loss using the loss_func provided.
+     *  	prediction/actual have dimensions=(size, no_of_samples)
+     */
     int col = threadIdx.x;
     float temp;
     for (int i = col; i <= (size - 1) * no_of_samples + col; i += no_of_samples)
@@ -35,10 +35,10 @@ template <typename loss_func>
 __global__ void find_loss_(float *prediction, float *actual, float *output, size_t no_of_samples,
                            size_t size, loss_func loss)
 {
-	/*
-	 *@brief finds loss using the loss_func provided. 
-	 *  	prediction/actual have dimensions=(no_of_samples, size)
-	 */
+    /*
+     *@brief finds loss using the loss_func provided.
+     *  	prediction/actual have dimensions=(no_of_samples, size)
+     */
     int row = threadIdx.x;
     float temp;
     for (int i = row * size; i < (row + 1) * size; ++i)

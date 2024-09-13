@@ -1,5 +1,5 @@
 /*
- *@Author: Krutarth Patel                                           
+ *@Author: Krutarth Patel
  *@Date: 13th september 2024
  *@Description : definition of the ActivationLayer class
  */
@@ -15,21 +15,21 @@ typedef std::shared_ptr<dev_vector<float>> dev_ptr;
 namespace nnet
 {
 class ActivationLayer : public BaseLayer
-{ 
-	 /*
-	  * @brief
-	  * special base class
-	  * the shape of the activation layer
-	  * is (n, n) like so:
-	  *
-	  * #--#
-	  * #--#
-	  * #--#
-	  *
-	  */
+{
+    /*
+     * @brief
+     * special base class
+     * the shape of the activation layer
+     * is (n, n) like so:
+     *
+     * #--#
+     * #--#
+     * #--#
+     *
+     */
   public:
-    ActivationLayer(size_t size) : BaseLayer(size){};
-    ActivationLayer(Shape &shape) : BaseLayer(shape){};
+    ActivationLayer(size_t size) : BaseLayer(size) {};
+    ActivationLayer(Shape &shape) : BaseLayer(shape) {};
     virtual std::shared_ptr<ActivationLayer> clone() = 0;
     virtual ~ActivationLayer()
     {
@@ -42,7 +42,7 @@ class Linear final : public ActivationLayer
     Linear(Linear &activation) : ActivationLayer(activation.dim)
     {
     }
-    Linear(size_t s) : ActivationLayer(s){};
+    Linear(size_t s) : ActivationLayer(s) {};
     ~Linear() = default;
     dev_ptr forward_pass(dev_ptr input, size_t no_of_samples) override;
     dev_ptr back_pass(const dev_ptr input, const size_t no_of_samples) override;
@@ -60,7 +60,7 @@ class Sigmoid final : public ActivationLayer
     Sigmoid(Sigmoid &activation) : ActivationLayer(activation.dim)
     {
     }
-    Sigmoid(size_t s) : ActivationLayer(s){};
+    Sigmoid(size_t s) : ActivationLayer(s) {};
     ~Sigmoid() = default;
     dev_ptr forward_pass(dev_ptr input, size_t no_of_samples) override;
     dev_ptr back_pass(const dev_ptr input, const size_t no_of_samples) override;
@@ -70,10 +70,10 @@ class Sigmoid final : public ActivationLayer
         auto ptr = std::make_shared<Sigmoid>(*this);
         return ptr;
     }
-	// these structs are passed to the kernel. 
-	// they hold the expression for the functions
-	// Forward is used during forward_pass
-	// Backward is used during back_pass
+    // these structs are passed to the kernel.
+    // they hold the expression for the functions
+    // Forward is used during forward_pass
+    // Backward is used during back_pass
     struct SigmoidForward
     {
         __host__ __device__ float operator()(float input)
@@ -98,7 +98,7 @@ class ReLU final : public ActivationLayer
     ReLU(ReLU &activation) : ActivationLayer(activation.dim)
     {
     }
-    ReLU(size_t s) : ActivationLayer(s){};
+    ReLU(size_t s) : ActivationLayer(s) {};
     ~ReLU() = default;
     dev_ptr forward_pass(dev_ptr input, size_t no_of_samples) override;
     dev_ptr back_pass(const dev_ptr input, const size_t no_of_samples) override;
@@ -108,10 +108,10 @@ class ReLU final : public ActivationLayer
         auto ptr = std::make_shared<ReLU>(*this);
         return ptr;
     }
-	// these structs are passed to the kernel. 
-	// they hold the expression for the functions
-	// Forward is used during forward_pass
-	// Backward is used during back_pass
+    // these structs are passed to the kernel.
+    // they hold the expression for the functions
+    // Forward is used during forward_pass
+    // Backward is used during back_pass
     struct ReLUForward
     {
         __host__ __device__ float operator()(float input)
